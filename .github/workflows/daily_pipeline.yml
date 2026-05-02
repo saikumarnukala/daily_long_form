@@ -19,6 +19,9 @@ on:
 env:
   PYTHON_VERSION: "3.10"
 
+permissions:
+  contents: write
+
 jobs:
   run-pipeline:
     name: Generate & Upload Daily Video
@@ -102,8 +105,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add data/history.json
           git diff --staged --quiet || git commit -m "chore: update history.json [skip ci]"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
