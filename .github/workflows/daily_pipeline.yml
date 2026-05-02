@@ -102,6 +102,7 @@ jobs:
       # ── 10. Commit updated history.json back to repo ─────────────────────
       - name: Commit history update
         if: success()
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
