@@ -2,6 +2,10 @@
 .env
 *.env
 
+# OAuth client secret files — never commit these
+client_secret.json
+client_secrets.json
+
 # Generated media (local runs)
 assets/temp/*.mp3
 assets/temp/*.mp4

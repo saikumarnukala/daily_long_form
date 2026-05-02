@@ -33,7 +33,13 @@ SCOPES = [
 
 def main():
     # Try to read client secret from file first, then env var
-    client_secret_file = "client_secret.json"
+    # Accept both common filename variants
+    for candidate in ("client_secrets.json", "client_secret.json"):
+        if os.path.exists(candidate):
+            client_secret_file = candidate
+            break
+    else:
+        client_secret_file = "client_secret.json"  # will fail below with clear message
     client_secret_env = os.getenv("YOUTUBE_CLIENT_SECRET", "")
 
     if os.path.exists(client_secret_file):
