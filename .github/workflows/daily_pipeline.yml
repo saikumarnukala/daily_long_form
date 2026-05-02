@@ -81,9 +81,9 @@ jobs:
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            python src/main.py --dry-run --cleanup-temp
+            python -m src.main --dry-run --cleanup-temp
           else
-            python src/main.py --cleanup-temp
+            python -m src.main --cleanup-temp
           fi
 
       # ── 9. Upload video artifact (7-day retention) ───────────────────────
