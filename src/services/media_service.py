@@ -56,9 +56,20 @@ def _get_best_video_file(video: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     files = video.get("video_files", [])
     if not files:
         return None
-    hd = [f for f in files if f.get("quality") in ("hd", "uhd") and f.get("width", 0) >= 1280]
+    # Cap at 1280x720 (HD-ready) — 1080p/4K files are 3-5x larger and
+    # cause disk/memory pressure on CI runners (7 GB RAM, 14 GB disk).
+    hd = [
+        f for f in files
+        if f.get("quality") in ("hd", "uhd")
+        and 1280 <= f.get("width", 0) <= 1920
+        and f.get("height", 9999) <= 720
+    ]
     if hd:
         return max(hd, key=lambda f: f.get("width", 0))
+    # Fall back: any file ≤ 1280 wide
+    sd = [f for f in files if f.get("width", 9999) <= 1280]
+    if sd:
+        return max(sd, key=lambda f: f.get("width", 0))
     return max(files, key=lambda f: f.get("width", 0))
 
 
