@@ -71,7 +71,7 @@ jobs:
       # ── 7. Verify critical imports ──────────────────────────────────────
       - name: Verify imports
         run: |
-          python -c "import moviepy; import edge_tts; import PIL; import requests; print('All imports OK')"
+          python -c "import edge_tts; import PIL; import requests; print('All imports OK')"
 
       # ── 8. Run the pipeline ─────────────────────────────────────────────
       - name: Run pipeline

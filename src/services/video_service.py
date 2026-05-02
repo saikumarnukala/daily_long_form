@@ -1,26 +1,25 @@
 """
-Video assembly service — MoviePy-based.
+Video assembly service — FFmpeg-based (memory-efficient, no MoviePy needed).
 
 Pipeline:
-  1. Load narration audio → measure exact duration.
-  2. Load all downloaded B-roll clips; resize each to 1920×1080.
-  3. Concatenate/loop clips to cover audio duration (+ 1-second safety buffer).
-  4. Attach narration audio to the video track.
-  5. If assets/bgmusic.mp3 exists, mix it under narration at -20 dB.
-  6. Add section-level subtitle TextClips (timing estimated from word count).
-  7. Apply 0.5 s crossfade dissolves between clips.
-  8. Add 1 s fade-in and 1 s fade-out on the final composite.
-  9. Export as 1920×1080 libx264/aac MP4 at 8 Mbps.
+  1. Probe clip durations with ffprobe.
+  2. Build an ffmpeg concat list, looping clips as needed.
+  3. FFmpeg pass 1: concatenate/loop B-roll, scale to 1920x1080, trim to audio length.
+  4. FFmpeg pass 2 (optional): mix background music under narration at -18 dB.
+  5. FFmpeg pass 3: combine video + audio with 1 s fade-in/out, export MP4.
+
+FFmpeg streams everything — no clips are loaded into RAM — so this works even
+on 7 GB GitHub Actions runners handling 36+ HD clips.
 """
-import math
+import json
 import os
+import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from src.config import (
     AUDIO_CODEC,
     PATHS,
-    TTS_WORDS_PER_MINUTE,
     VIDEO_BITRATE,
     VIDEO_CODEC,
     VIDEO_FPS,
@@ -31,179 +30,75 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# MoviePy is imported inside functions so that import errors produce clear messages
-# rather than crashing the entire module on import.
 
+# ─────────────────────────── ffprobe helpers ────────────────────────────────
 
-def _load_moviepy():
-    """Lazy MoviePy import (supports MoviePy 2.x)."""
+def _probe_duration(path: str) -> float:
+    """Return media duration in seconds using ffprobe. Returns 0.0 on failure."""
     try:
-        from moviepy import (
-            AudioFileClip,
-            CompositeAudioClip,
-            CompositeVideoClip,
-            TextClip,
-            VideoFileClip,
-            concatenate_videoclips,
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "quiet",
+                "-print_format", "json",
+                "-show_entries", "format=duration",
+                path,
+            ],
+            capture_output=True, text=True, timeout=30,
         )
-        from moviepy.audio.fx import AudioLoop, MultiplyVolume
-        from moviepy.video.fx import CrossFadeIn, FadeIn, FadeOut, Margin
-        return (
-            AudioFileClip, CompositeAudioClip, CompositeVideoClip,
-            TextClip, VideoFileClip, concatenate_videoclips,
-            AudioLoop, MultiplyVolume, CrossFadeIn, FadeIn, FadeOut, Margin,
+        data = json.loads(result.stdout)
+        return float(data["format"]["duration"])
+    except Exception as exc:
+        logger.warning("ffprobe failed for '%s': %s", path, exc)
+        return 0.0
+
+
+# ─────────────────────────── Concat list builder ────────────────────────────
+
+def _build_concat_list(clip_paths: List[str], target_duration: float, temp_dir: str) -> str:
+    """
+    Write an ffmpeg concat-demuxer list file, looping clips until they cover
+    *target_duration* seconds. Returns the path to the list file.
+    """
+    durations = [_probe_duration(p) for p in clip_paths]
+    valid = [(p, d) for p, d in zip(clip_paths, durations) if d > 0]
+    if not valid:
+        raise RuntimeError("No valid B-roll clips found (all have zero duration).")
+
+    list_path = Path(temp_dir) / "_broll_concat.txt"
+    total = 0.0
+    lines: List[str] = []
+    idx = 0
+
+    while total < target_duration + 5 and len(lines) < 300:
+        path, dur = valid[idx % len(valid)]
+        safe_path = path.replace("\\", "/")
+        lines.append(f"file '{safe_path}'")
+        total += dur
+        idx += 1
+
+    with open(list_path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+
+    logger.info("Concat list: %d entries covering %.0fs (need %.0fs)", len(lines), total, target_duration)
+    return str(list_path)
+
+
+# ─────────────────────────── ffmpeg runner ──────────────────────────────────
+
+def _run_ffmpeg(args: List[str], step: str) -> None:
+    """Run ffmpeg -y <args>, raising RuntimeError on non-zero exit."""
+    cmd = ["ffmpeg", "-y"] + args
+    logger.info("FFmpeg [%s] running…", step)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        # Include last 3000 chars of stderr for diagnosis
+        raise RuntimeError(
+            f"FFmpeg failed at step '{step}' (exit {result.returncode}):\n"
+            + result.stderr[-3000:]
         )
-    except ImportError as exc:
-        raise ImportError(
-            "MoviePy is not installed. Run: pip install moviepy"
-        ) from exc
 
 
-# ─────────────────────────── Subtitle helpers ───────────────────────────
-
-def _build_subtitle_clips(sections: Dict[str, str], total_duration: float, TextClip, FadeIn, FadeOut, Margin):
-    """
-    Build a list of TextClip objects timed proportionally to each section's word count.
-
-    Each section gets a short label displayed at the top-left for the duration
-    of that section.
-    """
-    section_order = ["hook", "problem", "explanation", "example", "cta"]
-    section_labels = {
-        "hook": "Introduction",
-        "problem": "The Problem",
-        "explanation": "Deep Dive",
-        "example": "Real Example",
-        "cta": "Summary",
-    }
-
-    word_counts = {}
-    total_words = 0
-    for key in section_order:
-        wc = len(sections.get(key, "").split())
-        word_counts[key] = wc
-        total_words += wc
-
-    if total_words == 0:
-        return []
-
-    subtitle_clips = []
-    current_start = 0.0
-
-    for key in section_order:
-        wc = word_counts[key]
-        if wc == 0:
-            continue
-        duration = (wc / total_words) * total_duration
-        label = section_labels.get(key, key.title())
-
-        try:
-            # Try common Windows fonts; fall back gracefully if none found
-            font_candidates = [
-                r"C:\Windows\Fonts\arialbd.ttf",
-                r"C:\Windows\Fonts\arial.ttf",
-                r"C:\Windows\Fonts\verdana.ttf",
-            ]
-            font_path = next((f for f in font_candidates if os.path.exists(f)), None)
-            if font_path is None:
-                logger.warning("No system font found for subtitle '%s'; skipping.", key)
-                current_start += duration
-                continue
-            clip = (
-                TextClip(
-                    font=font_path,
-                    text=label,
-                    font_size=32,
-                    color="white",
-                    stroke_color="black",
-                    stroke_width=2,
-                    method="label",
-                    duration=duration,
-                )
-                .with_position(("left", "top"))
-                .with_start(current_start)
-                .with_effects([Margin(left=20, top=20, opacity=1.0), FadeIn(0.3), FadeOut(0.3)])
-            )
-            subtitle_clips.append(clip)
-        except Exception as exc:
-            logger.warning("Could not create subtitle clip for section '%s': %s", key, exc)
-
-        current_start += duration
-
-    return subtitle_clips
-
-
-# ─────────────────────────── Clip preparation ───────────────────────────
-
-def _prepare_clips(clip_paths: List[str], target_duration: float, VideoFileClip, concatenate_videoclips, CrossFadeIn):
-    """
-    Load, resize, and concatenate B-roll clips to cover *target_duration* seconds.
-    Loops the clip list if necessary.
-    """
-    loaded = []
-    accumulated = 0.0
-
-    # Expand clip list by looping if needed
-    extended_paths = []
-    while accumulated < target_duration + 5:
-        extended_paths.extend(clip_paths)
-        for p in clip_paths:
-            try:
-                temp_clip = VideoFileClip(p)
-                accumulated += temp_clip.duration
-                temp_clip.close()
-            except Exception:
-                pass
-        if len(extended_paths) > len(clip_paths) * 10:
-            break  # safety: never loop more than 10x
-
-    accumulated = 0.0
-    for path in extended_paths:
-        if accumulated >= target_duration + 5:
-            break
-        try:
-            clip = VideoFileClip(path)
-            # Resize to target resolution maintaining aspect ratio via crop
-            clip = clip.resized(height=VIDEO_HEIGHT)
-            if clip.w < VIDEO_WIDTH:
-                clip = clip.resized(width=VIDEO_WIDTH)
-            # Centre-crop to exact 1920×1080
-            x_centre = clip.w / 2
-            y_centre = clip.h / 2
-            clip = clip.cropped(
-                x_center=x_centre,
-                y_center=y_centre,
-                width=VIDEO_WIDTH,
-                height=VIDEO_HEIGHT,
-            )
-            clip = clip.without_audio()
-            loaded.append(clip)
-            accumulated += clip.duration
-        except Exception as exc:
-            logger.warning("Failed to load clip '%s': %s", path, exc)
-
-    if not loaded:
-        raise RuntimeError("No video clips could be loaded for assembly.")
-
-    # Add crossfade transitions between clips
-    for i in range(len(loaded)):
-        if i == 0:
-            continue
-        try:
-            loaded[i] = loaded[i].with_effects([CrossFadeIn(0.5)])
-        except Exception:
-            pass  # not fatal if crossfade fails for a particular clip
-
-    combined = concatenate_videoclips(loaded, method="chain")
-
-    # Trim to exactly target_duration + 1 s buffer
-    if combined.duration > target_duration + 2:
-        combined = combined.subclipped(0, target_duration + 1)
-
-    return combined
-
-
-# ─────────────────────────── Public API ───────────────────────────
+# ─────────────────────────── Public API ─────────────────────────────────────
 
 def assemble_video(
     audio_path: str,
@@ -212,89 +107,120 @@ def assemble_video(
     output_path: str,
 ) -> str:
     """
-    Assemble the final 1920×1080 MP4 video.
+    Assemble the final 1920x1080 MP4 video using ffmpeg.
 
     Args:
-        audio_path:   Path to the narration MP3 file (from tts_service).
+        audio_path:   Path to the narration MP3 (from tts_service).
         clip_paths:   List of B-roll MP4 file paths (from media_service).
-        script_data:  Output of script_service.generate_script() containing 'sections'.
+        script_data:  Output of script_service (not used in ffmpeg path).
         output_path:  Destination path for the finished MP4.
 
     Returns:
         Absolute path of the exported MP4.
     """
-    (
-        AudioFileClip, CompositeAudioClip, CompositeVideoClip,
-        TextClip, VideoFileClip, concatenate_videoclips,
-        AudioLoop, MultiplyVolume, CrossFadeIn, FadeIn, FadeOut, Margin,
-    ) = _load_moviepy()
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.parent  # reuse the same temp dir
 
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    # ── 1. Measure audio duration ─────────────────────────────────────────
+    audio_duration = _probe_duration(audio_path)
+    if audio_duration == 0.0:
+        raise RuntimeError(f"Could not probe audio duration: {audio_path}")
+    logger.info(
+        "Audio duration: %.1f seconds (%.1f minutes)", audio_duration, audio_duration / 60
+    )
 
-    logger.info("Loading narration audio: %s", audio_path)
-    narration = AudioFileClip(audio_path)
-    total_duration = narration.duration
-    logger.info("Audio duration: %.1f seconds (%.1f minutes)", total_duration, total_duration / 60)
-
-    # ── 1. Prepare B-roll video ──────────────────────────────────────────
+    # ── 2. Build B-roll concat list ──────────────────────────────────────
     logger.info("Preparing %d B-roll clip(s)…", len(clip_paths))
-    video_track = _prepare_clips(clip_paths, total_duration, VideoFileClip, concatenate_videoclips, CrossFadeIn)
+    concat_list = _build_concat_list(clip_paths, audio_duration, str(tmp))
 
-    # ── 2. Build audio track (narration ± background music) ─────────────
+    # ── 3. Concatenate + scale B-roll → silent intermediate video ────────
+    silent_video = str(tmp / "_broll_silent.mp4")
+    scale_filter = (
+        f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
+        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
+        f"fps={VIDEO_FPS}"
+    )
+    _run_ffmpeg(
+        [
+            "-f", "concat", "-safe", "0", "-i", concat_list,
+            "-t", str(audio_duration + 1),
+            "-vf", scale_filter,
+            "-c:v", VIDEO_CODEC,
+            "-b:v", VIDEO_BITRATE,
+            "-preset", "fast",
+            "-an",
+            silent_video,
+        ],
+        step="concat_broll",
+    )
+
+    # ── 4. Prepare audio (optionally mix bgmusic) ─────────────────────────
     bgmusic_path = str(PATHS["bgmusic"])
     if os.path.exists(bgmusic_path):
         logger.info("Mixing background music: %s", bgmusic_path)
+        mixed_audio = str(tmp / "_mixed_audio.aac")
         try:
-            bgm = AudioFileClip(bgmusic_path).with_effects([AudioLoop(duration=total_duration)])
-            bgm = bgm.with_volume_scaled(0.12)   # ≈ -18 dB
-            audio_track = CompositeAudioClip([narration, bgm])
+            _run_ffmpeg(
+                [
+                    "-i", audio_path,
+                    "-stream_loop", "-1", "-i", bgmusic_path,
+                    "-filter_complex",
+                    f"[1:a]volume=0.12,atrim=0:{audio_duration}[bgm];"
+                    f"[0:a][bgm]amix=inputs=2:duration=first[aout]",
+                    "-map", "[aout]",
+                    "-c:a", AUDIO_CODEC,
+                    "-t", str(audio_duration),
+                    mixed_audio,
+                ],
+                step="mix_audio",
+            )
+            final_audio = mixed_audio
         except Exception as exc:
-            logger.warning("Background music mixing failed (%s). Using narration only.", exc)
-            audio_track = narration
+            logger.warning("Background music mix failed (%s). Using narration only.", exc)
+            final_audio = audio_path
     else:
-        audio_track = narration
+        final_audio = audio_path
 
-    # ── 3. Subtitle text overlays ────────────────────────────────────────
-    logger.info("Building subtitle overlays…")
-    subtitle_clips = _build_subtitle_clips(
-        script_data.get("sections", {}),
-        total_duration,
-        TextClip, FadeIn, FadeOut, Margin,
-    )
-
-    # ── 4. Compose final video ───────────────────────────────────────────
-    all_layers = [video_track] + subtitle_clips
-    final = CompositeVideoClip(all_layers, size=(VIDEO_WIDTH, VIDEO_HEIGHT))
-    final = final.with_audio(audio_track)
-    final = final.with_duration(total_duration)
-
-    # Fade in/out
-    final = final.with_effects([FadeIn(1.0), FadeOut(1.0)])
-
-    # ── 5. Export ────────────────────────────────────────────────────────
+    # ── 5. Combine video + audio with fade in/out ─────────────────────────
+    fade_out_start = max(0.0, audio_duration - 1.0)
     logger.info("Exporting video → %s", output_path)
-    final.write_videofile(
-        output_path,
-        fps=VIDEO_FPS,
-        codec=VIDEO_CODEC,
-        audio_codec=AUDIO_CODEC,
-        bitrate=VIDEO_BITRATE,
-        threads=4,
-        preset="fast",
-        logger=None,  # suppress MoviePy's verbose progress bar (we use our own logger)
+    _run_ffmpeg(
+        [
+            "-i", silent_video,
+            "-i", final_audio,
+            "-filter_complex",
+            f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1[v];"
+            f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]",
+            "-map", "[v]", "-map", "[a]",
+            "-c:v", VIDEO_CODEC,
+            "-b:v", VIDEO_BITRATE,
+            "-preset", "fast",
+            "-c:a", AUDIO_CODEC,
+            "-t", str(audio_duration),
+            output_path,
+        ],
+        step="final_export",
     )
 
-    # Clean up MoviePy objects
-    try:
-        final.close()
-        narration.close()
-        video_track.close()
-    except Exception:
-        pass
+    # ── 6. Cleanup intermediates ──────────────────────────────────────────
+    for tmp_file in [silent_video, concat_list]:
+        try:
+            if os.path.exists(tmp_file):
+                os.remove(tmp_file)
+        except OSError:
+            pass
+    if os.path.exists(bgmusic_path) and "mixed_audio" in locals():
+        try:
+            os.remove(mixed_audio)
+        except OSError:
+            pass
 
-    if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-        raise RuntimeError(f"Video export failed — output file is missing or empty: {output_path}")
+    if not out.exists() or out.stat().st_size == 0:
+        raise RuntimeError(
+            f"Video export failed — output file missing or empty: {output_path}"
+        )
 
-    size_mb = os.path.getsize(output_path) / (1024 * 1024)
+    size_mb = out.stat().st_size / (1024 * 1024)
     logger.info("Video export complete. Size: %.1f MB → %s", size_mb, output_path)
-    return output_path
+    return str(out)
