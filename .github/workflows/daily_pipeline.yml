@@ -1,0 +1,109 @@
+name: Daily YouTube Video Pipeline
+
+on:
+  # Run every day at 02:00 UTC (07:30 IST)
+  schedule:
+    - cron: "0 2 * * *"
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (skip YouTube upload)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+env:
+  PYTHON_VERSION: "3.10"
+
+jobs:
+  run-pipeline:
+    name: Generate & Upload Daily Video
+    runs-on: ubuntu-latest
+    timeout-minutes: 90        # full run including video export can take ~60 min
+
+    steps:
+      # ── 1. Checkout repository ──────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # ── 2. Set up Python ────────────────────────────────────────────────
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ── 3. Cache pip dependencies ────────────────────────────────────────
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # ── 4. Install system dependencies (ImageMagick for MoviePy TextClip) ─
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            imagemagick \
+            ffmpeg \
+            fonts-dejavu-core \
+            libgl1
+
+      # ── 5. Allow ImageMagick to write files (required for MoviePy) ────────
+      - name: Configure ImageMagick policy
+        run: |
+          sudo sed -i 's/rights="none" pattern="@\*"/rights="read|write" pattern="@*"/' \
+            /etc/ImageMagick-6/policy.xml || true
+
+      # ── 6. Install Python dependencies ──────────────────────────────────
+      - name: Install Python dependencies
+        run: pip install --upgrade pip ; pip install -r requirements.txt
+
+      # ── 7. Verify critical imports ──────────────────────────────────────
+      - name: Verify imports
+        run: |
+          python -c "import moviepy; import edge_tts; import PIL; import requests; print('All imports OK')"
+
+      # ── 8. Run the pipeline ─────────────────────────────────────────────
+      - name: Run pipeline
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python src/main.py --dry-run --cleanup-temp
+          else
+            python src/main.py --cleanup-temp
+          fi
+
+      # ── 9. Upload video artifact (7-day retention) ───────────────────────
+      - name: Upload video artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-video-${{ github.run_id }}
+          path: assets/output/
+          retention-days: 7
+          if-no-files-found: warn
+
+      # ── 10. Commit updated history.json back to repo ─────────────────────
+      - name: Commit history update
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/history.json
+          git diff --staged --quiet || git commit -m "chore: update history.json [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

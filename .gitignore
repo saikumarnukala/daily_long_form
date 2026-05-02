@@ -1,0 +1,57 @@
+# Environment
+.env
+*.env
+
+# Generated media (local runs)
+assets/temp/*.mp3
+assets/temp/*.mp4
+assets/temp/*.jpg
+assets/temp/*.png
+assets/output/*.mp4
+test_audio.mp3
+*TEMP_MPY*.mp4
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Assets (generated / downloaded at runtime)
+assets/temp/*
+assets/output/*
+!assets/temp/.gitkeep
+!assets/output/.gitkeep
+
+# Optional background music (user-supplied, not committed)
+assets/bgmusic.mp3
+
+# Logs
+logs/
+*.log
+
+# Google auth cache
+token.json
+credentials.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
