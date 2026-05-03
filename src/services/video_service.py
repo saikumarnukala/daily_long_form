@@ -84,7 +84,48 @@ def _build_concat_list(clip_paths: List[str], target_duration: float, temp_dir: 
     return str(list_path)
 
 
-# ─────────────────────────── ffmpeg runner ──────────────────────────────────
+# ─────────────────────────── Ken Burns per-clip zoom ───────────────────────
+
+def _apply_kenburns(src: str, dst: str, w: int, h: int, fps: int) -> None:
+    """
+    Pre-process a single B-roll clip: scale to 115% overscan, then apply a
+    slow diagonal pan that runs from the top-left corner of the overscan to
+    the center over 60 s.  Because `t` in the filter expression is the clip's
+    own PTS (starting at 0), each clip gets its own independent motion —
+    no more "stuck" / frozen-looking frames.
+
+    For a typical 10-20 s clip the pan covers ~15-30 % of the overscan range,
+    which is clearly visible but not distracting.
+    """
+    zoom = 1.15                    # 15 % overscan on each axis
+    W_Z = int(w * zoom)            # e.g. 2208 for 1920
+    H_Z = int(h * zoom)            # e.g. 1242 for 1080
+    max_x = W_Z - w               # pixels of horizontal overscan
+    max_y = H_Z - h               # pixels of vertical overscan
+    # Pan from (0, 0) → (max_x, max_y/2) over 60 s
+    vf = (
+        f"scale={W_Z}:{H_Z}:force_original_aspect_ratio=increase,"
+        f"crop={w}:{h}"
+        f":x='min({max_x}*t/60,{max_x})'"
+        f":y='min({max_y//2}*t/60,{max_y//2})',"
+        f"fps={fps}"
+    )
+    _run_ffmpeg(
+        [
+            "-i", src,
+            "-vf", vf,
+            "-c:v", VIDEO_CODEC,
+            "-preset", "ultrafast",
+            "-b:v", "2500k",
+            "-threads", "2",
+            "-max_muxing_queue_size", "9999",
+            "-an",
+            dst,
+        ],
+        step=f"kb_{Path(dst).stem}",
+    )
+
+
 
 def _run_ffmpeg(args: List[str], step: str) -> None:
     """Run ffmpeg -y <args>, raising RuntimeError on non-zero exit."""
@@ -132,29 +173,31 @@ def assemble_video(
         "Audio duration: %.1f seconds (%.1f minutes)", audio_duration, audio_duration / 60
     )
 
-    # ── 2. Build B-roll concat list ──────────────────────────────────────
-    logger.info("Preparing %d B-roll clip(s)…", len(clip_paths))
-    concat_list = _build_concat_list(clip_paths, audio_duration, str(tmp))
+    # ── 2. Pre-process each unique clip with Ken Burns zoom ─────────────────
+    logger.info("Applying Ken Burns zoom to %d clip(s)…", len(clip_paths))
+    zoomed_paths: List[str] = []
+    for src in clip_paths:
+        stem = Path(src).stem
+        dst = str(tmp / f"_kb_{stem}.mp4")
+        if not Path(dst).exists():
+            try:
+                _apply_kenburns(src, dst, VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_FPS)
+            except Exception as exc:
+                logger.warning("Ken Burns failed for %s (%s) — using raw clip.", src, exc)
+                dst = src
+        zoomed_paths.append(dst)
 
-    # ── 3. Concatenate + scale B-roll → silent intermediate video ────────
+    # ── 3. Build B-roll concat list (from zoomed clips) ─────────────────────
+    logger.info("Preparing concat list from zoomed clips…")
+    concat_list = _build_concat_list(zoomed_paths, audio_duration, str(tmp))
+
+    # ── 4. Concatenate zoomed B-roll → silent intermediate video ────────────
+    # Clips are already scaled/fps-matched; just concat + trim.
     silent_video = str(tmp / "_broll_silent.mp4")
-    # Ken Burns: scale to 108% overscan, then crop with a slow left→right pan
-    # over 12 minutes.  Uses a simple arithmetic `t`-variable expression which
-    # is far lighter than the `zoompan` filter (~36 min vs ~6 min on CI).
-    W_PAD = int(VIDEO_WIDTH * 1.08)   # 2074
-    H_PAD = int(VIDEO_HEIGHT * 1.08)  # 1166
-    scale_filter = (
-        f"scale={W_PAD}:{H_PAD}:force_original_aspect_ratio=increase,"
-        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}"
-        f":x='min((iw-{VIDEO_WIDTH})*t/720,iw-{VIDEO_WIDTH})'"
-        f":y='(ih-{VIDEO_HEIGHT})/2',"
-        f"fps={VIDEO_FPS}"
-    )
     _run_ffmpeg(
         [
             "-f", "concat", "-safe", "0", "-i", concat_list,
             "-t", str(audio_duration + 1),
-            "-vf", scale_filter,
             "-c:v", VIDEO_CODEC,
             "-b:v", "3500k",
             "-preset", "ultrafast",
@@ -256,7 +299,7 @@ def assemble_video(
         )
 
     # ── 6. Cleanup intermediates ──────────────────────────────────────────
-    for tmp_file in [silent_video, concat_list]:
+    for tmp_file in [silent_video, concat_list] + [p for p in zoomed_paths if "_kb_" in p]:
         try:
             if os.path.exists(tmp_file):
                 os.remove(tmp_file)
