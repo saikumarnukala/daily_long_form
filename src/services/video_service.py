@@ -13,9 +13,10 @@ on 7 GB GitHub Actions runners handling 36+ HD clips.
 """
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.config import (
     AUDIO_CODEC,
@@ -125,6 +126,139 @@ def _apply_kenburns(src: str, dst: str, w: int, h: int, fps: int) -> None:
         step=f"kb_{Path(dst).stem}",
     )
 
+
+
+# ─────────────────────────── SRT overlay builder ───────────────────────────
+
+# Section display labels (shown as a lower-third when each section begins)
+_SECTION_LABELS: Dict[str, str] = {
+    "hook":        "📌 Did You Know?",
+    "problem":     "⚠️  The Problem",
+    "explanation": "💡 How It Works",
+    "example":     "📊 Real Example",
+    "cta":         "✅  Take Action",
+}
+
+# Pattern that matches standalone financial values:
+# ₹1,20,000 / 90% / 3.5x / ₹500 / 12 lakh / $1,000 etc.
+_VALUE_RE = re.compile(
+    r"(?:"
+    r"(?:Rs\.?|₹|\$)\s?\d[\d,\.]*(?:\s?(?:lakh|crore|thousand|million|billion|k|L|Cr))?|"
+    r"\d[\d,\.]*\s?(?:lakh|crore|thousand|million|billion|k|L|Cr)|"
+    r"\d+(?:\.\d+)?\s?(?:%|percent|x|times)"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _srt_ts_to_seconds(ts: str) -> float:
+    """Convert SRT timestamp '00:01:23,456' to float seconds."""
+    ts = ts.replace(",", ".")
+    parts = ts.split(":")
+    return int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+
+
+def _parse_srt(srt_path: str) -> List[Tuple[float, float, str]]:
+    """
+    Parse an SRT file into a list of (start_s, end_s, text) tuples.
+    """
+    entries: List[Tuple[float, float, str]] = []
+    try:
+        with open(srt_path, encoding="utf-8") as fh:
+            content = fh.read()
+        # Each block is separated by blank lines
+        for block in re.split(r"\n{2,}", content.strip()):
+            lines = block.strip().splitlines()
+            if len(lines) < 3:
+                continue
+            # line 0: index, line 1: timestamps, line 2+: text
+            ts_line = lines[1]
+            if " --> " not in ts_line:
+                continue
+            start_s, end_s = (
+                _srt_ts_to_seconds(t.strip()) for t in ts_line.split(" --> ")
+            )
+            text = " ".join(lines[2:])
+            entries.append((start_s, end_s, text))
+    except Exception as exc:
+        logger.warning("SRT parse failed: %s", exc)
+    return entries
+
+
+def _build_overlay_filters(
+    srt_entries: List[Tuple[float, float, str]],
+    script_data: Dict[str, Any],
+    audio_duration: float,
+) -> List[str]:
+    """
+    Return a list of ffmpeg drawtext filter strings that:
+      1. Show a section label (lower-third) when each script section starts.
+      2. Highlight key financial values in a pop-up card when the narrator
+         speaks them (detected by matching SRT text against _VALUE_RE).
+
+    All filters use `enable='between(t,START,END)'` so they are precisely
+    timed to the narration.
+    """
+    filters: List[str] = []
+    if not srt_entries:
+        return filters
+
+    sections = script_data.get("sections", {})
+    total_words = sum(len(s.split()) for s in sections.values())
+    words_per_second = total_words / max(audio_duration, 1.0)
+
+    # ── 1. Section label overlays ──────────────────────────────────────────
+    # Estimate when each section starts based on cumulative word count.
+    section_order = ["hook", "problem", "explanation", "example", "cta"]
+    elapsed_words = 0
+    for section_key in section_order:
+        label = _SECTION_LABELS.get(section_key, "")
+        text = sections.get(section_key, "")
+        if not text or not label:
+            elapsed_words += len(text.split())
+            continue
+        start_s = elapsed_words / max(words_per_second, 0.01)
+        show_dur = 3.5  # seconds the label stays visible
+        end_s = min(start_s + show_dur, audio_duration - 1)
+        # Escape special chars for ffmpeg drawtext
+        safe_label = label.replace("'", "\\'").replace(":", "\\:")
+        filters.append(
+            f"drawtext=text='{safe_label}'"
+            f":enable='between(t,{start_s:.2f},{end_s:.2f})'"
+            ":fontsize=38:fontcolor=white:bordercolor=black:borderw=3"
+            ":box=1:boxcolor=0x1a1a2e@0.82:boxborderw=16"
+            ":x=60:y=h-160"
+        )
+        elapsed_words += len(text.split())
+
+    # ── 2. Value pop-up overlays ───────────────────────────────────────────
+    # Walk SRT entries; when a value token is found, display it in a gold card.
+    shown_values: set = set()  # avoid duplicating the same value
+    for start_s, end_s, text in srt_entries:
+        matches = _VALUE_RE.findall(text)
+        for raw in matches:
+            value = " ".join(raw.split())   # normalise whitespace
+            if value.lower() in shown_values:
+                continue
+            shown_values.add(value.lower())
+            show_dur = min(end_s - start_s + 1.5, 4.0)
+            disp_end = min(start_s + show_dur, audio_duration - 1)
+            safe_val = value.replace("'", "\\'").replace(":", "\\:")
+            # Gold card, centred horizontally, in the upper-right quadrant
+            filters.append(
+                f"drawtext=text='{safe_val}'"
+                f":enable='between(t,{start_s:.2f},{disp_end:.2f})'"
+                ":fontsize=68:fontcolor=0xFFB900:bordercolor=black:borderw=4"
+                ":box=1:boxcolor=black@0.72:boxborderw=20"
+                ":x=w-text_w-60:y=h*0.22"
+            )
+            if len(filters) > 80:   # cap: ffmpeg filter_complex has limits
+                break
+        if len(filters) > 80:
+            break
+
+    logger.info("Overlay filters built: %d total.", len(filters))
+    return filters
 
 
 def _run_ffmpeg(args: List[str], step: str) -> None:
@@ -241,31 +375,36 @@ def assemble_video(
     outro_start = max(0.0, audio_duration - 8.0)
     logger.info("Exporting video → %s", output_path)
 
-    # Subtitles are generated as a separate .srt file (not burned into video).
+    # ── Build SRT-synced value + section overlays ─────────────────────────
+    srt_entries: List[Tuple[float, float, str]] = []
     if subtitle_path and os.path.exists(subtitle_path):
-        logger.info("SRT file available: %s (not burned into video)", subtitle_path)
+        srt_entries = _parse_srt(subtitle_path)
+        logger.info("Parsed %d SRT entries for overlay sync.", len(srt_entries))
 
-    # Outro text overlay — appears in final 8 seconds
-    outro_filter = (
-        f",drawtext=text='Subscribe to {CHANNEL_BRANDING}'"
+    overlay_filters = _build_overlay_filters(srt_entries, script_data, audio_duration)
+
+    # ── Outro text overlay — appears in final 8 seconds ───────────────────
+    outro_drawtext = (
+        f"drawtext=text='Subscribe to {CHANNEL_BRANDING}'"
         f":enable='gte(t,{outro_start:.1f})'"
         ":fontsize=52:fontcolor=white:bordercolor=black:borderw=3"
         ":box=1:boxcolor=black@0.65:boxborderw=18"
-        ":x=(w-text_w)/2:y=h*0.44"
-        f",drawtext=text='Tap the bell for daily finance videos'"
+        ":x=(w-text_w)/2:y=h*0.44,"
+        f"drawtext=text='Tap the bell for daily finance videos'"
         f":enable='gte(t,{outro_start:.1f})'"
         ":fontsize=30:fontcolor=yellow:bordercolor=black:borderw=2"
         ":box=1:boxcolor=black@0.65:boxborderw=10"
         ":x=(w-text_w)/2:y=h*0.56"
     )
 
-    vf = (
-        f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1"
-        f"{outro_filter}[v]"
+    # Chain: fade → overlay filters → outro
+    all_vf_parts = (
+        [f"fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1"]
+        + overlay_filters
+        + [outro_drawtext]
     )
-    af = (
-        f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
-    )
+    vf = "[0:v]" + ",".join(all_vf_parts) + "[v]"
+    af = f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
 
     _common_encode = [
         "-c:v", VIDEO_CODEC, "-b:v", "3500k", "-preset", "ultrafast",
@@ -284,8 +423,8 @@ def assemble_video(
         )
     except RuntimeError as exc:
         logger.warning(
-            "Final export with subtitle/outro filters failed (%s). "
-            "Retrying without overlay filters.", exc
+            "Final export with overlay filters failed (%s). "
+            "Retrying without overlays.", exc
         )
         plain_vf = f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1[v]"
         plain_af = f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
