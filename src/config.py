@@ -137,7 +137,7 @@ TOPIC_SCHEDULE = {
 YOUTUBE_CATEGORY_ID = "22"        # People & Blogs
 YOUTUBE_DEFAULT_LANGUAGE = "en"
 YOUTUBE_PRIVACY_STATUS = "public"
-CHANNEL_BRANDING = "Finance Decoded"
+CHANNEL_BRANDING = "Daksha Luma"
 
 # ─────────────────────────── Pipeline Settings ───────────────────────────
 MAX_HISTORY_LOOKBACK = 4           # avoid repeating a subtopic within 4 cycles

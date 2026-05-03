@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from src.config import PATHS
+from src.config import CHANNEL_BRANDING, PATHS
 from src.services import (
     media_service,
     script_service,
@@ -98,6 +98,7 @@ class PipelineOrchestrator:
         )
         context["audio_path"] = result["audio_path"]
         context["audio_duration"] = result["duration_seconds"]
+        context["subtitle_path"] = result.get("subtitle_path")
 
     def _step_media(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 4: Media Fetching ───")
@@ -141,6 +142,7 @@ class PipelineOrchestrator:
             clip_paths=context["clip_paths"],
             script_data=context["script_data"],
             output_path=output_path,
+            subtitle_path=context.get("subtitle_path"),
         )
         context["video_path"] = output_path
 
@@ -158,8 +160,8 @@ class PipelineOrchestrator:
             "07:00 Real-World Example (₹)\n"
             "10:00 Your Action Plan\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🔔 Subscribe to Finance Decoded for daily finance education!\n"
-            "#FinanceDecoded #PersonalFinance #IndiaFinance #MoneyTips"
+            f"🔔 Subscribe to {CHANNEL_BRANDING} for daily finance education!\n"
+            f"#{CHANNEL_BRANDING.replace(' ', '')} #PersonalFinance #IndiaFinance #MoneyTips"
         )
         context["upload_metadata"] = {
             "title": script["title"],

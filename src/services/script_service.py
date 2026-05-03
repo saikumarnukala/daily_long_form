@@ -1189,6 +1189,83 @@ _TEMPLATE_MAP = {
 }
 
 
+# ─────────────────────────── Attention hooks & outro ───────────────────────────
+
+def _build_attention_hook(category: str, subtopic: str) -> str:
+    """Sharp 3-4 sentence hook — captures viewer attention in the first 15 seconds."""
+    hooks = {
+        "Stock Market Basics": (
+            f"What if I told you that an ordinary Indian investing just 5,000 rupees every month"
+            f" 15 years ago, without picking a single stock, would have over 40 lakh rupees today?"
+            f" That is not a theory. That is real data from the Indian stock market."
+            f" And by the end of this video, you will have exactly that system available to you."
+        ),
+        "Mutual Funds": (
+            f"Here is a fact that quietly cost millions of Indian investors crores of rupees:"
+            f" over 90 percent of actively managed mutual funds in India failed to beat a simple"
+            f" index fund over the last 10 years. Once you understand why, you will make"
+            f" dramatically smarter investment choices starting today."
+        ),
+        "Personal Finance": (
+            f"The average Indian household is losing over 2 lakh rupees every single year to three"
+            f" specific financial mistakes. Not because they are careless or not earning enough,"
+            f" but simply because nobody taught them these three things."
+            f" Today we are going to fix all three of them in one video."
+        ),
+        "Tax Planning": (
+            f"Most salaried Indians are quietly overpaying their income tax by anywhere between"
+            f" 20,000 and 1 lakh rupees every single year, completely unnecessarily."
+            f" Not because of any mistake, but simply because they do not know about the"
+            f" deductions that are sitting right there, waiting to be claimed."
+            f" Today I show you exactly where that money is."
+        ),
+        "Cryptocurrency": (
+            f"Here is the honest truth nobody in the crypto world wants to say out loud:"
+            f" 95 percent of Indian crypto investors have lost money. But the 5 percent who"
+            f" made life-changing returns did not get lucky. They followed specific principles."
+            f" Today I am walking you through those exact principles."
+        ),
+        "Real Estate": (
+            f"Is buying a flat in India a smart investment or the biggest financial trap of"
+            f" your life? Most people I ask get this completely wrong, and it costs them"
+            f" 30 lakh to over a crore rupees over their lifetime. Today you will get the"
+            f" honest, data-backed answer. Not the answer a broker wants you to hear."
+        ),
+        "Budgeting": (
+            f"A study of thousands of Indian households found that people who follow a simple"
+            f" written budget save 43 percent more every month than those who do not."
+            f" Not 5 percent more. 43 percent more. Same income, same city, same expenses,"
+            f" completely different outcomes. I am going to give you that system right now."
+        ),
+    }
+    return hooks.get(
+        category,
+        (
+            f"What I am about to show you about {subtopic} genuinely changed how I think about"
+            f" money. And I am confident it will do the same for you. Stay with me for the next"
+            f" few minutes, because this one is worth your full attention."
+        ),
+    )
+
+
+def _build_subscribe_outro() -> str:
+    """Rich, emotional subscribe CTA for the very end of the video."""
+    return (
+        f"Before you go, I have one small request. If this video gave you even a single"
+        f" insight that you can apply to improve your finances, please hit that subscribe"
+        f" button right now and tap the bell icon. That is the only way YouTube will notify"
+        f" you when our next video goes live."
+        f"\n\nAnd honestly, every single day we publish a brand new finance education video"
+        f" right here on {CHANNEL_BRANDING}. Completely free. No paywalls, no courses to buy."
+        f" Topics like investing, mutual funds, tax saving, budgeting, and everything in between,"
+        f" all explained simply and practically for Indians like you and me."
+        f"\n\nIf you have questions, drop them in the comments below. I read every single one"
+        f" and reply to as many as I can. Your financial future is absolutely worth investing"
+        f" this time in. Thank you so much for watching. I will see you tomorrow,"
+        f" right here on {CHANNEL_BRANDING}. Take care of your money."
+    )
+
+
 def generate_script(topic_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate a full video script for the given topic.
@@ -1211,12 +1288,24 @@ def generate_script(topic_data: Dict[str, Any]) -> Dict[str, Any]:
     result = template_fn(subtopic)
     sections: Dict[str, str] = result["sections"]
 
+    # Emotional bridge injected between problem and explanation — adds natural
+    # laugh/sad moments so the TTS voice has emotional variety in delivery.
+    emotional_bridge = (
+        "And honestly, when I first understood this properly, I had two reactions at once."
+        " I felt genuinely sad that this information is not taught in schools."
+        " And then I kind of laughed, because the solution, once you see it, is actually"
+        " so simple and so accessible. So let me walk you through it clearly right now."
+    )
+
     full_text = "\n\n".join([
+        _build_attention_hook(category, subtopic),
         sections["hook"],
         sections["problem"],
+        emotional_bridge,
         sections["explanation"],
         sections["example"],
         sections["cta"],
+        _build_subscribe_outro(),
     ])
 
     word_count = len(full_text.split())

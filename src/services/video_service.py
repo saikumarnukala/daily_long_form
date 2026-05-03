@@ -15,10 +15,11 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from src.config import (
     AUDIO_CODEC,
+    CHANNEL_BRANDING,
     PATHS,
     VIDEO_BITRATE,
     VIDEO_CODEC,
@@ -105,6 +106,7 @@ def assemble_video(
     clip_paths: List[str],
     script_data: Dict[str, Any],
     output_path: str,
+    subtitle_path: Optional[str] = None,
 ) -> str:
     """
     Assemble the final 1920x1080 MP4 video using ffmpeg.
@@ -184,28 +186,78 @@ def assemble_video(
     else:
         final_audio = audio_path
 
-    # ── 5. Combine video + audio with fade in/out ─────────────────────────
+    # ── 5. Combine video + audio with subtitles, outro, and fade in/out ──────
     fade_out_start = max(0.0, audio_duration - 1.0)
+    outro_start = max(0.0, audio_duration - 8.0)
     logger.info("Exporting video → %s", output_path)
-    _run_ffmpeg(
-        [
-            "-i", silent_video,
-            "-i", final_audio,
-            "-filter_complex",
-            f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1[v];"
-            f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]",
-            "-map", "[v]", "-map", "[a]",
-            "-c:v", VIDEO_CODEC,
-            "-b:v", "3500k",
-            "-preset", "ultrafast",
-            "-threads", "2",
-            "-max_muxing_queue_size", "9999",
-            "-c:a", AUDIO_CODEC,
-            "-t", str(audio_duration),
-            output_path,
-        ],
-        step="final_export",
+
+    # Build subtitle filter (optional — requires libass in ffmpeg)
+    sub_filter = ""
+    if subtitle_path and os.path.exists(subtitle_path):
+        safe_sub = subtitle_path.replace("\\", "/")
+        if os.name == "nt":
+            # Escape Windows drive-letter colon for ffmpeg filter parser
+            safe_sub = safe_sub.replace(":", "\\\\:")
+        sub_filter = (
+            f",subtitles={safe_sub}"
+            ":force_style='Fontsize=22,PrimaryColour=&H00FFFFFF,"
+            "OutlineColour=&H00000000,Outline=2,Shadow=1,"
+            "Alignment=2,MarginV=45,Bold=1'"
+        )
+        logger.info("Subtitles enabled: %s", subtitle_path)
+
+    # Outro text overlay — appears in final 8 seconds
+    outro_filter = (
+        f",drawtext=text='Subscribe to {CHANNEL_BRANDING}'"
+        f":enable='gte(t,{outro_start:.1f})'"
+        ":fontsize=52:fontcolor=white:bordercolor=black:borderw=3"
+        ":box=1:boxcolor=black@0.65:boxborderw=18"
+        ":x=(w-text_w)/2:y=h*0.44"
+        f",drawtext=text='Tap the bell for daily finance videos'"
+        f":enable='gte(t,{outro_start:.1f})'"
+        ":fontsize=30:fontcolor=yellow:bordercolor=black:borderw=2"
+        ":box=1:boxcolor=black@0.65:boxborderw=10"
+        ":x=(w-text_w)/2:y=h*0.56"
     )
+
+    vf = (
+        f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1"
+        f"{sub_filter}{outro_filter}[v]"
+    )
+    af = (
+        f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
+    )
+
+    _common_encode = [
+        "-c:v", VIDEO_CODEC, "-b:v", "3500k", "-preset", "ultrafast",
+        "-threads", "2", "-max_muxing_queue_size", "9999",
+        "-c:a", AUDIO_CODEC, "-t", str(audio_duration),
+    ]
+
+    try:
+        _run_ffmpeg(
+            [
+                "-i", silent_video, "-i", final_audio,
+                "-filter_complex", f"{vf};{af}",
+                "-map", "[v]", "-map", "[a]",
+            ] + _common_encode + [output_path],
+            step="final_export",
+        )
+    except RuntimeError as exc:
+        logger.warning(
+            "Final export with subtitle/outro filters failed (%s). "
+            "Retrying without overlay filters.", exc
+        )
+        plain_vf = f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1[v]"
+        plain_af = f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
+        _run_ffmpeg(
+            [
+                "-i", silent_video, "-i", final_audio,
+                "-filter_complex", f"{plain_vf};{plain_af}",
+                "-map", "[v]", "-map", "[a]",
+            ] + _common_encode + [output_path],
+            step="final_export_fallback",
+        )
 
     # ── 6. Cleanup intermediates ──────────────────────────────────────────
     for tmp_file in [silent_video, concat_list]:
@@ -214,6 +266,7 @@ def assemble_video(
                 os.remove(tmp_file)
         except OSError:
             pass
+    bgmusic_path = str(PATHS["bgmusic"])
     if os.path.exists(bgmusic_path) and "mixed_audio" in locals():
         try:
             os.remove(mixed_audio)

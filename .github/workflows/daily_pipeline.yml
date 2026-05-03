@@ -110,5 +110,5 @@ jobs:
           git add data/history.json
           git diff --staged --quiet && exit 0
           git commit -m "chore: update history.json [skip ci]"
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
           git push

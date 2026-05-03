@@ -87,14 +87,19 @@ def _make_gradient_background() -> Image.Image:
 
 def _apply_gradient_overlay(img: Image.Image) -> Image.Image:
     """
-    Overlay a semi-transparent dark gradient over the bottom 55% of the image.
-    This ensures text is always readable regardless of background photo.
+    Apply a cinematic dark gradient: subtle top vignette + heavy bottom darkening.
+    This ensures title text is always legible regardless of background photo.
     """
     overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
-    overlay_start = int(img.height * 0.45)
+    # Top vignette (subtle)
+    for y in range(0, int(img.height * 0.25)):
+        alpha = int(80 * (1 - y / (img.height * 0.25)))
+        draw.line([(0, y), (img.width, y)], fill=(0, 0, 0, alpha))
+    # Bottom gradient (heavy — covers bottom 65% for text readability)
+    overlay_start = int(img.height * 0.35)
     for y in range(overlay_start, img.height):
-        alpha = int(200 * (y - overlay_start) / (img.height - overlay_start))
+        alpha = int(220 * (y - overlay_start) / (img.height - overlay_start))
         draw.line([(0, y), (img.width, y)], fill=(0, 0, 0, alpha))
     return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
@@ -182,44 +187,78 @@ def create_thumbnail(
 
     draw = ImageDraw.Draw(img)
 
-    # 3. Channel badge (top-left)
-    badge_font = _load_font(28, bold=True)
-    badge_text = f"▶  {CHANNEL_BRANDING.upper()}"
-    badge_padding = 12
+    # ── 3. Topic keyword badge (top-left, dark navy + gold text) ──────────
+    badge_font = _load_font(22, bold=True)
+    badge_text = keyword.upper()[:22]
+    badge_padding = 10
     badge_x, badge_y = 24, 24
-    # Badge background
     try:
         bbox = draw.textbbox((badge_x, badge_y), badge_text, font=badge_font)
         bx1, by1, bx2, by2 = bbox
     except AttributeError:
-        # Older Pillow fallback
         bw, bh = draw.textsize(badge_text, font=badge_font)
         bx1, by1, bx2, by2 = badge_x, badge_y, badge_x + bw, badge_y + bh
-
     draw.rectangle(
         [bx1 - badge_padding, by1 - badge_padding // 2,
          bx2 + badge_padding, by2 + badge_padding // 2],
-        fill=(220, 50, 50),  # red badge
+        fill=(13, 33, 55),  # dark navy
     )
-    draw.text((badge_x, badge_y), badge_text, font=badge_font, fill=(255, 255, 255))
+    draw.text((badge_x, badge_y), badge_text, font=badge_font, fill=(255, 179, 0))  # gold
 
-    # 4. Main title text (bottom area)
-    title_font = _load_font(68, bold=True)
-    max_chars_per_line = 28
+    # ── 4. Main title text (large, centered in lower 60%) ─────────────────
+    BOTTOM_BAR_HEIGHT = 88
+    title_font = _load_font(72, bold=True)
+    max_chars_per_line = 26
     wrapped_lines = textwrap.wrap(title, width=max_chars_per_line)
     if len(wrapped_lines) > 3:
         wrapped_lines = wrapped_lines[:3]
         wrapped_lines[-1] = wrapped_lines[-1][:-3] + "..."
 
-    line_height = 80
+    line_height = 84
     total_text_height = len(wrapped_lines) * line_height
-    start_y = THUMBNAIL_HEIGHT - total_text_height - 55
+    # Leave space for bottom bar + gold accent line
+    start_y = THUMBNAIL_HEIGHT - total_text_height - BOTTOM_BAR_HEIGHT - 28
 
     for i, line in enumerate(wrapped_lines):
         y = start_y + i * line_height
-        _draw_text_with_shadow(draw, (48, y), line, font=title_font, shadow_offset=4)
+        _draw_text_with_shadow(draw, (40, y), line, font=title_font, shadow_offset=4)
 
-    # 5. Save
+    # ── 5. Gold accent divider line above bottom bar ───────────────────────
+    accent_y = THUMBNAIL_HEIGHT - BOTTOM_BAR_HEIGHT - 3
+    draw.rectangle([0, accent_y, THUMBNAIL_WIDTH, accent_y + 5], fill=(255, 179, 0))
+
+    # ── 6. Bottom channel branding bar (semi-transparent) ─────────────────
+    bar_overlay = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    bar_draw = ImageDraw.Draw(bar_overlay)
+    bar_draw.rectangle(
+        [0, THUMBNAIL_HEIGHT - BOTTOM_BAR_HEIGHT, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT],
+        fill=(5, 5, 15, 218),
+    )
+    img = Image.alpha_composite(img.convert("RGBA"), bar_overlay).convert("RGB")
+    draw = ImageDraw.Draw(img)
+
+    # Channel name in gold (left side of bar)
+    ch_font = _load_font(40, bold=True)
+    ch_text = CHANNEL_BRANDING.upper()
+    ch_y = THUMBNAIL_HEIGHT - BOTTOM_BAR_HEIGHT + (BOTTOM_BAR_HEIGHT - 40) // 2
+    _draw_text_with_shadow(
+        draw, (40, ch_y), ch_text,
+        font=ch_font, fill=(255, 179, 0), shadow_color=(0, 0, 0), shadow_offset=2,
+    )
+
+    # "New video every day" tagline (right side, subtle)
+    tag_font = _load_font(24, bold=False)
+    tag_text = "New video every day"
+    try:
+        tag_bbox = draw.textbbox((0, 0), tag_text, font=tag_font)
+        tag_w = tag_bbox[2] - tag_bbox[0]
+    except AttributeError:
+        tag_w, _ = draw.textsize(tag_text, font=tag_font)
+    tag_x = THUMBNAIL_WIDTH - tag_w - 36
+    tag_y = ch_y + 8
+    draw.text((tag_x, tag_y), tag_text, font=tag_font, fill=(190, 190, 190))
+
+    # ── 7. Save ────────────────────────────────────────────────────────────
     img.save(output_path, "JPEG", quality=95, optimize=True)
     logger.info("Thumbnail saved → %s", output_path)
     return output_path
