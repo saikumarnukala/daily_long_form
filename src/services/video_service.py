@@ -198,20 +198,9 @@ def assemble_video(
     outro_start = max(0.0, audio_duration - 8.0)
     logger.info("Exporting video → %s", output_path)
 
-    # Build subtitle filter (optional — requires libass in ffmpeg)
-    sub_filter = ""
+    # Subtitles are generated as a separate .srt file (not burned into video).
     if subtitle_path and os.path.exists(subtitle_path):
-        safe_sub = subtitle_path.replace("\\", "/")
-        if os.name == "nt":
-            # Escape Windows drive-letter colon for ffmpeg filter parser
-            safe_sub = safe_sub.replace(":", "\\\\:")
-        sub_filter = (
-            f",subtitles={safe_sub}"
-            ":force_style='Fontsize=22,PrimaryColour=&H00FFFFFF,"
-            "OutlineColour=&H00000000,Outline=2,Shadow=1,"
-            "Alignment=2,MarginV=45,Bold=1'"
-        )
-        logger.info("Subtitles enabled: %s", subtitle_path)
+        logger.info("SRT file available: %s (not burned into video)", subtitle_path)
 
     # Outro text overlay — appears in final 8 seconds
     outro_filter = (
@@ -229,7 +218,7 @@ def assemble_video(
 
     vf = (
         f"[0:v]fade=t=in:st=0:d=1,fade=t=out:st={fade_out_start:.3f}:d=1"
-        f"{sub_filter}{outro_filter}[v]"
+        f"{outro_filter}[v]"
     )
     af = (
         f"[1:a]afade=t=in:st=0:d=1,afade=t=out:st={fade_out_start:.3f}:d=1[a]"
