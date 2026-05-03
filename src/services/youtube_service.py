@@ -11,7 +11,6 @@ Capabilities:
   - upload_video(): Resumable video upload with metadata.
   - set_thumbnail(): Upload custom thumbnail after video is live.
 """
-import json
 import os
 from typing import Any, Dict, List
 
@@ -23,6 +22,7 @@ from googleapiclient.http import MediaFileUpload
 
 from src.config import (
     YOUTUBE_CATEGORY_ID,
+    YOUTUBE_CLIENT_ID,
     YOUTUBE_CLIENT_SECRET,
     YOUTUBE_DEFAULT_LANGUAGE,
     YOUTUBE_PRIVACY_STATUS,
@@ -46,7 +46,13 @@ _API_VERSION = "v3"
 def _build_credentials() -> google.oauth2.credentials.Credentials:
     """
     Build OAuth2 credentials from environment variables (no browser required).
+    Expects YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET (raw string), YOUTUBE_REFRESH_TOKEN.
     """
+    if not YOUTUBE_CLIENT_ID:
+        raise EnvironmentError(
+            "YOUTUBE_CLIENT_ID environment variable is not set. "
+            "See .env.example for setup instructions."
+        )
     if not YOUTUBE_CLIENT_SECRET:
         raise EnvironmentError(
             "YOUTUBE_CLIENT_SECRET environment variable is not set. "
@@ -58,27 +64,12 @@ def _build_credentials() -> google.oauth2.credentials.Credentials:
             "Run scripts/get_youtube_token.py to obtain it."
         )
 
-    try:
-        client_secret_data = json.loads(YOUTUBE_CLIENT_SECRET)
-    except json.JSONDecodeError as exc:
-        raise ValueError(
-            f"YOUTUBE_CLIENT_SECRET is not valid JSON: {exc}. "
-            "Ensure the full client_secret.json content is pasted as a single line."
-        ) from exc
-
-    # Support both "installed" and "web" OAuth2 client types
-    client_info = client_secret_data.get("installed") or client_secret_data.get("web")
-    if not client_info:
-        raise ValueError(
-            "YOUTUBE_CLIENT_SECRET JSON must contain an 'installed' or 'web' key."
-        )
-
     credentials = google.oauth2.credentials.Credentials(
         token=None,
         refresh_token=YOUTUBE_REFRESH_TOKEN,
-        token_uri=client_info["token_uri"],
-        client_id=client_info["client_id"],
-        client_secret=client_info["client_secret"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=YOUTUBE_CLIENT_ID,
+        client_secret=YOUTUBE_CLIENT_SECRET,
         scopes=_SCOPES,
     )
 

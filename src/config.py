@@ -30,7 +30,8 @@ PATHS = {
 
 # ─────────────────────────── API Keys ───────────────────────────
 PEXELS_API_KEY: str = os.getenv("PEXELS_API_KEY", "")
-YOUTUBE_CLIENT_SECRET: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")
+YOUTUBE_CLIENT_ID: str = os.getenv("YOUTUBE_CLIENT_ID", "")
+YOUTUBE_CLIENT_SECRET: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")  # raw OAuth client secret string (not JSON)
 YOUTUBE_REFRESH_TOKEN: str = os.getenv("YOUTUBE_REFRESH_TOKEN", "")
 
 # ─────────────────────────── API Endpoints ───────────────────────────
