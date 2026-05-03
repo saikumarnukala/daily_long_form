@@ -38,8 +38,10 @@ _CHUNK_WORDS = 400
 _SSML_CAPABLE = {
     "en-US-AriaNeural",
     "en-US-GuyNeural",
+    "en-US-EricNeural",
     "en-US-JennyNeural",
-    "en-US-DavisNeural",
+    "en-US-AvaNeural",
+    "en-US-RogerNeural",
     "en-GB-SoniaNeural",
 }
 

@@ -42,13 +42,13 @@ PEXELS_PHOTO_API = "https://api.pexels.com/v1/search"
 # One distinct global voice per weekday (0=Mon … 6=Sun).
 # All are top-rated explainer/narrator voices; US voices also get SSML emotion styles.
 TTS_VOICES = [
-    "en-US-AriaNeural",     # 0 Mon — Female, US  — warm storytelling, empathetic
-    "en-US-GuyNeural",      # 1 Tue — Male,   US  — clear newscast/explainer
-    "en-GB-RyanNeural",     # 2 Wed — Male,   UK  — professional narrator
-    "en-US-JennyNeural",    # 3 Thu — Female, US  — friendly, educational
-    "en-AU-NatashaNeural",  # 4 Fri — Female, AU  — calm, engaging presenter
-    "en-US-DavisNeural",    # 5 Sat — Male,   US  — conversational, relatable
-    "en-GB-SoniaNeural",    # 6 Sun — Female, UK  — calm, authoritative
+    "en-US-AriaNeural",    # 0 Mon — Female, US — warm storytelling, SSML emotions ✓
+    "en-US-GuyNeural",     # 1 Tue — Male,   US — newscast/explainer, SSML emotions ✓
+    "en-US-EricNeural",    # 2 Wed — Male,   US — authoritative narrator, SSML emotions ✓
+    "en-US-JennyNeural",   # 3 Thu — Female, US — friendly/educational, SSML emotions ✓
+    "en-US-AvaNeural",     # 4 Fri — Female, US — expressive presenter, SSML emotions ✓
+    "en-US-RogerNeural",   # 5 Sat — Male,   US — engaging storyteller, SSML emotions ✓
+    "en-GB-SoniaNeural",   # 6 Sun — Female, UK — calm/authoritative, SSML emotions ✓
 ]
 TTS_RATE = "+0%"
 TTS_VOLUME = "+0%"
