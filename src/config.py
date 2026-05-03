@@ -39,9 +39,16 @@ PEXELS_VIDEO_API = "https://api.pexels.com/videos/search"
 PEXELS_PHOTO_API = "https://api.pexels.com/v1/search"
 
 # ─────────────────────────── TTS ───────────────────────────
+# One distinct global voice per weekday (0=Mon … 6=Sun).
+# All are top-rated explainer/narrator voices; US voices also get SSML emotion styles.
 TTS_VOICES = [
-    "en-IN-NeerjaNeural",   # Female
-    "en-IN-PrabhatNeural",  # Male
+    "en-US-AriaNeural",     # 0 Mon — Female, US  — warm storytelling, empathetic
+    "en-US-GuyNeural",      # 1 Tue — Male,   US  — clear newscast/explainer
+    "en-GB-RyanNeural",     # 2 Wed — Male,   UK  — professional narrator
+    "en-US-JennyNeural",    # 3 Thu — Female, US  — friendly, educational
+    "en-AU-NatashaNeural",  # 4 Fri — Female, AU  — calm, engaging presenter
+    "en-US-DavisNeural",    # 5 Sat — Male,   US  — conversational, relatable
+    "en-GB-SoniaNeural",    # 6 Sun — Female, UK  — calm, authoritative
 ]
 TTS_RATE = "+0%"
 TTS_VOLUME = "+0%"

@@ -12,6 +12,7 @@ Subtitles are generated from the text + audio duration (time-based, always works
 """
 import asyncio
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -32,6 +33,62 @@ if sys.platform.startswith("win"):
 
 _CHUNK_WORDS = 400
 
+# ─── SSML emotion injection ──────────────────────────────────────────────────
+# Voices confirmed to support mstts:express-as cheerful + sad styles.
+_SSML_CAPABLE = {
+    "en-US-AriaNeural",
+    "en-US-GuyNeural",
+    "en-US-JennyNeural",
+    "en-US-DavisNeural",
+    "en-GB-SoniaNeural",
+}
+
+
+def _xml_escape(text: str) -> str:
+    return (
+        text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+    )
+
+
+def _build_ssml(text: str, voice: str) -> str:
+    """Return an SSML document with emotion tags injected around emotional phrases.
+
+    For non-SSML-capable voices the original plain text is returned unchanged.
+    The function works on already-flattened single-line text (after _split_text).
+    """
+    if voice not in _SSML_CAPABLE:
+        return text
+
+    # Derive xml:lang from the voice short-name (e.g. en-US-AriaNeural → en-US)
+    m = re.match(r"(en-[A-Z]{2})", voice)
+    xml_lang = m.group(1) if m else "en-US"
+
+    body = _xml_escape(text)
+
+    # Cheerful: the "Ha!" laugh sentence up to the sad pivot
+    body = re.sub(
+        r"(Ha!.*?)(?=But here is where)",
+        r'<mstts:express-as style="cheerful">\1</mstts:express-as>',
+        body,
+    )
+    # Sad: from "But here is where I have to pause" through "clearly."
+    body = re.sub(
+        r"(But here is where.*?clearly\.)",
+        r'<mstts:express-as style="sad">\1</mstts:express-as>',
+        body,
+    )
+
+    return (
+        f"<speak version='1.0' "
+        f"xmlns='http://www.w3.org/2001/10/synthesis' "
+        f"xmlns:mstts='http://www.w3.org/2001/mstts' "
+        f"xml:lang='{xml_lang}'>"
+        f"<voice name='{voice}'>{body}</voice>"
+        f"</speak>"
+    )
+
 
 def _split_text(text: str, max_words: int = _CHUNK_WORDS) -> List[str]:
     text = " ".join(text.split())
@@ -49,7 +106,8 @@ def _split_text(text: str, max_words: int = _CHUNK_WORDS) -> List[str]:
 
 
 async def _synthesise_chunk(text: str, output_path: str, voice: str) -> None:
-    communicate = edge_tts.Communicate(text=text, voice=voice, rate=TTS_RATE, volume=TTS_VOLUME, pitch=TTS_PITCH)
+    content = _build_ssml(text, voice)  # returns SSML or plain text
+    communicate = edge_tts.Communicate(text=content, voice=voice, rate=TTS_RATE, volume=TTS_VOLUME, pitch=TTS_PITCH)
     await communicate.save(output_path)
 
 

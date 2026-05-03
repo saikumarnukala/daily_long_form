@@ -94,7 +94,7 @@ class PipelineOrchestrator:
         result = tts_service.generate_tts(
             text=context["script_data"]["full_text"],
             output_path=audio_path,
-            voice_index=weekday % 2,  # alternate voices by day
+            voice_index=weekday,  # 0-6 → unique voice per day
         )
         context["audio_path"] = result["audio_path"]
         context["audio_duration"] = result["duration_seconds"]
