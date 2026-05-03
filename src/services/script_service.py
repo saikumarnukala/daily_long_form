@@ -8,6 +8,7 @@ parameterized slots. Scripts follow the structure:
 Target: ~1800-2200 words ~= 9-11 minutes at 175 wpm TTS speed.
 """
 from typing import Any, Dict, List
+import re
 
 from src.config import CHANNEL_BRANDING, TTS_WORDS_PER_MINUTE
 from src.utils.logger import get_logger
@@ -1189,6 +1190,92 @@ _TEMPLATE_MAP = {
 }
 
 
+# ─────────────────────────── Globalisation post-processor ──────────────────────
+
+_GLOBAL_REPLACEMENTS = [
+    # Currency
+    ("rupees per month", "dollars per month"),
+    ("rupees every month", "dollars every month"),
+    ("rupees", "dollars"),
+    ("₹", "$"),
+    ("Rs.", "$"),
+    # Exchanges & indices
+    ("Nifty 50", "S&P 500"),
+    ("Nifty", "the index"),
+    ("Sensex", "the market index"),
+    ("NSE", "major stock exchange"),
+    ("BSE", "major stock exchange"),
+    # Regulators & brokers
+    ("SEBI-registered", "licensed"),
+    ("SEBI", "the financial regulator"),
+    ("DEMAT", "brokerage"),
+    ("Zerodha", "your broker"),
+    ("Groww", "your broker"),
+    ("Upstox", "your brokerage"),
+    ("Kuvera", "your broker"),
+    ("Paytm Money", "your broker"),
+    # Food delivery
+    ("Swiggy and Zomato", "food delivery apps"),
+    ("Zomato and Swiggy", "food delivery apps"),
+    ("Swiggy", "food delivery"),
+    ("Zomato", "food delivery"),
+    # Tax / identity — longer phrases first
+    ("ELSS funds, or Equity Linked Saving Schemes, are equity funds with a 3 year lock-in"
+     " period that also provide a tax deduction under Section 80C up to 1.5 lakh rupees per year.",
+     "Tax-saving funds are equity funds with a lock-in period that also provide a tax deduction."),
+    ("Section 80C", "tax-advantaged accounts"),
+    ("HRA", "housing allowance"),
+    ("ITR", "tax return"),
+    ("ELSS", "tax-saving fund"),
+    ("Aadhaar", "national ID"),
+    ("PAN card", "tax ID"),
+    ("PAN", "tax ID"),
+    # Geography — longer/more-specific phrases first
+    ("in India", "globally"),
+    ("India's", "the economy's"),
+    ("for Indians", "for you"),
+    ("Indians like you and me", "people like you and me"),
+    ("Indian stock market", "the stock market"),
+    ("Indian investors", "investors like you"),
+    ("Indian Investors", "investors"),
+    ("Indian middle class", "everyday earners"),
+    ("Indian professionals", "professionals"),
+    ("Indian household", "the average household"),
+    ("Indian households", "households"),
+    ("Indian taxpayers", "taxpayers"),
+    ("Indian incomes", "your income"),
+    ("Indian expense", "expense"),
+    ("Indian context", "your context"),
+    ("Indian rupee", "real"),
+    ("Indian crypto investors", "crypto investors"),
+    ("Indian", "your"),
+    # Cities
+    ("in Pune", "in your city"),
+    ("in Mumbai", "in a major city"),
+    ("Mumbai", "a major city"),
+    ("Pune", "your city"),
+    # Title suffixes
+    ("| Complete Guide for Indian Investors", "| Complete Beginner's Guide"),
+    ("Practical Money Guide for Indians", "Practical Money Guide"),
+    ("Save More Tax Legally globally", "Save More Tax Legally"),
+    ("Save More Tax Legally in India", "Save More Tax Legally"),
+]
+
+
+def _globalize(text: str) -> str:
+    """Replace India-specific terms with neutral, globally-applicable language."""
+    for old, new in _GLOBAL_REPLACEMENTS:
+        text = text.replace(old, new)
+    # Regex-based word-boundary replacements (catch remaining edge cases)
+    text = re.sub(r"\bIndia\b", "globally", text)
+    text = re.sub(r"\blakhs\b", "hundreds of thousands", text)
+    text = re.sub(r"\blakh\b", "hundred thousand", text)
+    text = re.sub(r"\bcrores\b", "tens of millions", text)
+    text = re.sub(r"\bcrore\b", "ten million", text)
+    return text
+
+
+
 # ─────────────────────────── Attention hooks & outro ───────────────────────────
 
 def _build_attention_hook(category: str, subtopic: str) -> str:
@@ -1291,13 +1378,18 @@ def generate_script(topic_data: Dict[str, Any]) -> Dict[str, Any]:
     # Emotional bridge injected between problem and explanation — adds natural
     # laugh/sad moments so the TTS voice has emotional variety in delivery.
     emotional_bridge = (
-        "And honestly, when I first understood this properly, I had two reactions at once."
-        " I felt genuinely sad that this information is not taught in schools."
-        " And then I kind of laughed, because the solution, once you see it, is actually"
-        " so simple and so accessible. So let me walk you through it clearly right now."
+        "Ha! And you know what genuinely made me laugh the first time I understood this properly?"
+        " The solution is not complicated. It is actually really simple."
+        " So simple that once you see it, you will wonder why nobody explained it to you years ago."
+        "\n\nBut here is where I have to pause for a second. Because this is also the part"
+        " that honestly... made me sad. Genuinely sad."
+        " Because millions of people are missing this every single day."
+        " Not because they are not smart. Not because they do not care about their money."
+        " Simply because nobody ever sat down and explained it to them clearly."
+        " Well, that changes right now. Let me walk you through it step by step."
     )
 
-    full_text = "\n\n".join([
+    full_text = _globalize("\n\n".join([
         _build_attention_hook(category, subtopic),
         sections["hook"],
         sections["problem"],
@@ -1306,7 +1398,7 @@ def generate_script(topic_data: Dict[str, Any]) -> Dict[str, Any]:
         sections["example"],
         sections["cta"],
         _build_subscribe_outro(),
-    ])
+    ]))
 
     word_count = len(full_text.split())
     duration_estimate = (word_count / TTS_WORDS_PER_MINUTE) * 60.0
@@ -1322,8 +1414,8 @@ def generate_script(topic_data: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     return {
-        "title": result["title"],
-        "description": result["description"],
+        "title": _globalize(result["title"]),
+        "description": _globalize(result["description"]),
         "tags": tags,
         "sections": sections,
         "full_text": full_text,

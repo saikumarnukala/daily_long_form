@@ -138,9 +138,16 @@ def assemble_video(
 
     # ── 3. Concatenate + scale B-roll → silent intermediate video ────────
     silent_video = str(tmp / "_broll_silent.mp4")
+    # Ken Burns: scale to 108% overscan, then crop with a slow left→right pan
+    # over 12 minutes.  Uses a simple arithmetic `t`-variable expression which
+    # is far lighter than the `zoompan` filter (~36 min vs ~6 min on CI).
+    W_PAD = int(VIDEO_WIDTH * 1.08)   # 2074
+    H_PAD = int(VIDEO_HEIGHT * 1.08)  # 1166
     scale_filter = (
-        f"scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
-        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
+        f"scale={W_PAD}:{H_PAD}:force_original_aspect_ratio=increase,"
+        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}"
+        f":x='min((iw-{VIDEO_WIDTH})*t/720,iw-{VIDEO_WIDTH})'"
+        f":y='(ih-{VIDEO_HEIGHT})/2',"
         f"fps={VIDEO_FPS}"
     )
     _run_ffmpeg(
