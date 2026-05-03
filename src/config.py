@@ -34,6 +34,11 @@ YOUTUBE_CLIENT_ID: str = os.getenv("YOUTUBE_CLIENT_ID", "")
 YOUTUBE_CLIENT_SECRET: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")  # raw OAuth client secret string (not JSON)
 YOUTUBE_REFRESH_TOKEN: str = os.getenv("YOUTUBE_REFRESH_TOKEN", "")
 
+# Azure Cognitive Services Speech — enables real mstts:express-as emotion styles.
+# Free tier: 500,000 chars/month. Leave blank to fall back to edge-tts.
+AZURE_SPEECH_KEY: str = os.getenv("AZURE_SPEECH_KEY", "")
+AZURE_SPEECH_REGION: str = os.getenv("AZURE_SPEECH_REGION", "eastus")
+
 # ─────────────────────────── API Endpoints ───────────────────────────
 PEXELS_VIDEO_API = "https://api.pexels.com/videos/search"
 PEXELS_PHOTO_API = "https://api.pexels.com/v1/search"
