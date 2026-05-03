@@ -180,6 +180,53 @@ def get_clips(
                 except Exception as exc:
                     logger.warning("Failed to download clip %d: %s", vid_id, exc)
 
+    # Last-resort: try broad finance keywords if all topic-specific ones failed
+    if not downloaded_paths:
+        fallbacks = ["money", "business office", "finance"]
+        logger.warning(
+            "No clips for %s — trying generic fallbacks %s", keywords, fallbacks
+        )
+        for keyword in fallbacks:
+            if accumulated >= target_seconds:
+                break
+            for page in range(1, 3):
+                if accumulated >= target_seconds:
+                    break
+                try:
+                    videos = _search_pexels_videos(keyword, page=page)
+                except Exception as exc:
+                    logger.error("Fallback search '%s' failed: %s", keyword, exc)
+                    continue
+                for video in videos:
+                    if accumulated >= target_seconds:
+                        break
+                    vid_id = video.get("id")
+                    if vid_id in new_used_ids:
+                        continue
+                    clip_duration = float(video.get("duration", 0))
+                    if clip_duration < 3:
+                        continue
+                    best_file = _get_best_video_file(video)
+                    if not best_file:
+                        continue
+                    dest = os.path.join(temp_dir, f"clip_{vid_id}.mp4")
+                    if os.path.exists(dest):
+                        downloaded_paths.append(dest)
+                        new_used_ids.append(vid_id)
+                        accumulated += clip_duration
+                        continue
+                    try:
+                        _download_video(best_file["link"], dest)
+                        downloaded_paths.append(dest)
+                        new_used_ids.append(vid_id)
+                        accumulated += clip_duration
+                        logger.info(
+                            "Fallback clip %d downloaded (%.0fs) | total: %.0fs",
+                            vid_id, clip_duration, accumulated,
+                        )
+                    except Exception as exc:
+                        logger.warning("Fallback clip %d failed: %s", vid_id, exc)
+
     if not downloaded_paths:
         raise RuntimeError(
             f"No clips could be downloaded for keywords {keywords}. "

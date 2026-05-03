@@ -106,7 +106,7 @@ TOPIC_SCHEDULE = {
     },
     3: {
         "category": "Tax Planning",
-        "keywords": ["income tax India", "tax saving", "ITR filing"],
+        "keywords": ["income tax", "tax saving", "financial documents"],
         "subtopics": [
             "Section 80C Tax Saving Investments Explained",
             "How to File ITR for Salaried Employees",
@@ -116,7 +116,7 @@ TOPIC_SCHEDULE = {
     },
     4: {
         "category": "Cryptocurrency",
-        "keywords": ["cryptocurrency India", "bitcoin", "blockchain technology"],
+        "keywords": ["cryptocurrency", "bitcoin", "blockchain technology"],
         "subtopics": [
             "Bitcoin Basics: What Every Indian Should Know",
             "How Blockchain Technology Works",
@@ -126,7 +126,7 @@ TOPIC_SCHEDULE = {
     },
     5: {
         "category": "Real Estate",
-        "keywords": ["real estate investment India", "property", "housing market"],
+        "keywords": ["real estate investment", "property", "housing market"],
         "subtopics": [
             "Rent vs Buy: What Makes Sense in India",
             "How to Invest in REITs in India",
@@ -136,7 +136,7 @@ TOPIC_SCHEDULE = {
     },
     6: {
         "category": "Budgeting",
-        "keywords": ["budgeting tips India", "financial planning", "expense tracking"],
+        "keywords": ["budgeting tips", "financial planning", "expense tracking"],
         "subtopics": [
             "The 50-30-20 Budgeting Rule for Indians",
             "Zero-Based Budgeting Explained Simply",
