@@ -132,6 +132,27 @@
         5466778,
         7735851
       ]
+    },
+    {
+      "date": "2026-05-03",
+      "weekday": 6,
+      "category": "Budgeting",
+      "subtopic": "How to Track Every Rupee You Spend",
+      "title": "How to Track Every Rupee You Spend | Take Control of Your Money in 2025",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260503.mp4",
+      "video_id": "imGqGzHt3F4",
+      "clips_used": [
+        11321636,
+        5466772,
+        7735865,
+        7593891,
+        7593898,
+        7735861,
+        6963965,
+        31424892,
+        6963967,
+        6326929
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -245,7 +266,17 @@
     6700643,
     8275703,
     5466778,
-    7735851
+    7735851,
+    11321636,
+    5466772,
+    7735865,
+    7593891,
+    7593898,
+    7735861,
+    6963965,
+    31424892,
+    6963967,
+    6326929
   ],
   "used_pexels_images": []
 }
