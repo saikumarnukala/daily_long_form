@@ -2,12 +2,15 @@
 Central configuration module.
 All settings are loaded from environment variables via python-dotenv.
 """
+import datetime
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+_YEAR = datetime.date.today().year
 
 # ─────────────────────────── Base Paths ───────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -89,7 +92,7 @@ TOPIC_SCHEDULE = {
         "keywords": ["mutual fund", "SIP investment", "fund management"],
         "subtopics": [
             "How SIP Works: A Beginner's Guide",
-            "Best Mutual Fund Categories for 2025",
+            f"Best Mutual Fund Categories for {_YEAR}",
             "Direct vs Regular Mutual Funds Explained",
             "How to Exit Mutual Funds Smartly",
         ],
@@ -120,8 +123,8 @@ TOPIC_SCHEDULE = {
         "subtopics": [
             "Bitcoin Basics: What Every Indian Should Know",
             "How Blockchain Technology Works",
-            "Crypto Tax Rules in India 2025",
-            "Top Altcoins to Research in 2025",
+            f"Crypto Tax Rules in India {_YEAR}",
+            f"Top Altcoins to Research in {_YEAR}",
         ],
     },
     5: {

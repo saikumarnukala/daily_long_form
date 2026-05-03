@@ -7,7 +7,10 @@ parameterized slots. Scripts follow the structure:
 
 Target: ~1800-2200 words ~= 9-11 minutes at 175 wpm TTS speed.
 """
+import datetime
 from typing import Any, Dict, List
+
+_YEAR = datetime.date.today().year
 import re
 
 from src.config import CHANNEL_BRANDING, TTS_WORDS_PER_MINUTE
@@ -760,7 +763,7 @@ def _template_crypto(subtopic: str) -> Dict[str, Any]:
         f" Cryptocurrency is completely legal to buy, sell, and hold in India. It is not banned."
         f" The Indian government has chosen regulation over prohibition. Cryptocurrency is not"
         f" legal tender in India. You cannot use it to pay for everyday goods."
-        f" From a tax perspective as of 2025, gains from cryptocurrency transfers are taxed at"
+        f" From a tax perspective as of {_YEAR}, gains from cryptocurrency transfers are taxed at"
         f" a flat 30 percent rate regardless of how long you held the asset. There is no benefit"
         f" for long-term holding unlike equity. Additionally, a 1 percent TDS is deducted at"
         f" source on cryptocurrency transactions above 50,000 rupees per year with a registered exchange."
@@ -945,7 +948,7 @@ def _template_real_estate(subtopic: str) -> Dict[str, Any]:
         f" He invests the remaining 37,600 rupees per month into a diversified equity portfolio."
         f"\n\nAfter 20 years, let us look at both outcomes."
         f"\n\nArjun: Property has appreciated at 7 percent annually."
-        f" 80 lakh purchased in 2025 is worth approximately 3.1 crore rupees in 2045."
+        f" 80 lakh purchased in {_YEAR} is worth approximately 3.1 crore rupees in {_YEAR + 20}."
         f" Total cost paid: 16 lakh down payment plus 4.5 lakh stamp duty plus 57,600 EMI times"
         f" 240 months equals approximately 1.38 crore rupees in EMIs."
         f" Total ownership cost: approximately 1.82 crore rupees."
@@ -999,7 +1002,7 @@ def _template_real_estate(subtopic: str) -> Dict[str, Any]:
 
 
 def _template_budgeting(subtopic: str) -> Dict[str, Any]:
-    title = f"{subtopic} | Take Control of Your Money in 2025"
+    title = f"{subtopic} | Take Control of Your Money in {_YEAR}"
     description = (
         f"Master {subtopic} with this practical, India-focused guide. "
         "Step-by-step frameworks, real rupee examples, and tools to track every rupee "
