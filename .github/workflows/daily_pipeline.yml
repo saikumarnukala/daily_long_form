@@ -1,9 +1,9 @@
 name: Daily YouTube Video Pipeline
 
 on:
-  # Run every day at 22:00 UTC (6:00 PM EDT / 3:00 PM PDT) – USA prime time
+  # Run every day at 15:30 UTC (9:00 PM IST – India prime time)
   schedule:
-    - cron: "0 22 * * *"
+    - cron: "30 15 * * *"
   # Allow manual trigger from GitHub Actions UI
   workflow_dispatch:
     inputs:
