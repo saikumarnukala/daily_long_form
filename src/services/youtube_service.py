@@ -35,7 +35,6 @@ logger = get_logger(__name__)
 
 _SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
-    "https://www.googleapis.com/auth/youtube",
 ]
 _API_SERVICE_NAME = "youtube"
 _API_VERSION = "v3"
@@ -70,7 +69,7 @@ def _build_credentials() -> google.oauth2.credentials.Credentials:
         token_uri="https://oauth2.googleapis.com/token",
         client_id=YOUTUBE_CLIENT_ID,
         client_secret=YOUTUBE_CLIENT_SECRET,
-        scopes=_SCOPES,
+        # Do not pass scopes — let Google honour whatever was granted at token creation
     )
 
     # Force token refresh to validate credentials before upload

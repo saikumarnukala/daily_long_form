@@ -18,6 +18,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
   contents: write
@@ -92,17 +93,7 @@ jobs:
             python -m src.main --cleanup-temp
           fi
 
-      # ── 9. Upload video artifact (7-day retention) ───────────────────────
-      - name: Upload video artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: daily-video-${{ github.run_id }}
-          path: assets/output/
-          retention-days: 7
-          if-no-files-found: warn
-
-      # ── 10. Commit updated history.json back to repo ─────────────────────
+      # ── 9. Commit updated history.json back to repo ─────────────────────
       - name: Commit history update
         if: success()
         continue-on-error: true
