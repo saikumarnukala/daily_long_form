@@ -22,39 +22,46 @@ logger = get_logger(__name__)
 
 _TAG_BANK: Dict[str, List[str]] = {
     "Stock Market Basics": [
-        "stock market for beginners", "nifty 50", "how to invest in stocks India",
-        "equity investment", "trading basics", "stock market India 2025",
-        "sensex", "share market", "long term investing",
+        "stock market for beginners", "how to invest in stocks", "S&P 500 explained",
+        "index fund investing", "long term investing", "stock market 2025",
+        "passive investing", "how to start investing", "Fidelity Vanguard Schwab",
+        "dollar cost averaging", "brokerage account", "compound interest explained",
     ],
     "Mutual Funds": [
-        "mutual fund SIP", "best mutual funds India", "SIP investment",
-        "mutual fund for beginners", "direct mutual fund", "equity mutual fund",
-        "debt mutual fund", "mutual fund returns India", "ELSS tax saving",
+        "index funds vs mutual funds", "best index funds 2025", "Vanguard index fund",
+        "ETF investing beginners", "how to invest in index funds", "low cost index funds",
+        "total stock market fund", "expense ratio explained", "401k investment options",
+        "Fidelity ZERO fund", "VTSAX vs VOO", "mutual fund for beginners",
     ],
     "Personal Finance": [
-        "personal finance India", "money management", "financial planning",
-        "how to save money", "emergency fund", "financial freedom India",
-        "passive income India", "wealth building India",
+        "personal finance tips", "money management for beginners", "financial planning USA",
+        "how to save money fast", "emergency fund", "financial freedom",
+        "passive income ideas", "wealth building tips", "50 30 20 rule",
+        "pay yourself first", "money mindset", "financial independence",
     ],
     "Tax Planning": [
-        "income tax India", "section 80C", "ITR filing", "tax saving tips India",
-        "HRA exemption", "new tax regime", "old tax regime", "tax deductions India",
-        "how to save tax in India",
+        "tax tips USA", "how to save on taxes", "tax deductions for employees",
+        "401k tax benefits", "Roth IRA vs traditional IRA", "standard deduction 2025",
+        "tax filing tips", "IRS deductions", "HSA tax benefits",
+        "W2 tax return", "capital gains tax explained", "tax brackets 2025",
     ],
     "Cryptocurrency": [
-        "cryptocurrency India", "bitcoin India", "crypto investing 2025",
-        "blockchain explained", "crypto tax India", "ethereum India",
-        "altcoins India", "crypto for beginners",
+        "cryptocurrency for beginners", "bitcoin 2025", "crypto investing guide",
+        "blockchain explained", "crypto taxes USA", "ethereum explained",
+        "bitcoin vs ethereum", "crypto portfolio 2025", "coinbase kraken binance",
+        "crypto regulation USA", "defi explained", "crypto risk management",
     ],
     "Real Estate": [
-        "real estate investment India", "property investment India", "REIT India",
-        "rent vs buy India", "affordable housing", "property tax India",
-        "real estate 2025", "housing market India",
+        "real estate investing USA", "rent vs buy house", "REITs explained",
+        "real estate for beginners", "house hacking", "rental property income",
+        "real estate 2025", "housing market USA", "how to buy first home",
+        "real estate passive income", "property appreciation", "mortgage explained",
     ],
     "Budgeting": [
-        "budgeting tips India", "50 30 20 rule", "zero based budgeting",
-        "how to manage money India", "expense tracker", "monthly budget India",
-        "financial planning India", "save money India",
+        "budgeting for beginners", "50 30 20 rule", "zero based budgeting",
+        "how to manage money", "expense tracker app", "monthly budget template",
+        "how to stop living paycheck to paycheck", "save money tips 2025",
+        "YNAB budgeting", "mint app budgeting", "cash envelope method", "debt snowball",
     ],
 }
 
@@ -1270,11 +1277,14 @@ def _globalize(text: str) -> str:
     for old, new in _GLOBAL_REPLACEMENTS:
         text = text.replace(old, new)
     # Regex-based word-boundary replacements (catch remaining edge cases)
-    text = re.sub(r"\bIndia\b", "globally", text)
-    text = re.sub(r"\blakhs\b", "hundreds of thousands", text)
-    text = re.sub(r"\blakh\b", "hundred thousand", text)
-    text = re.sub(r"\bcrores\b", "tens of millions", text)
-    text = re.sub(r"\bcrore\b", "ten million", text)
+    text = re.sub(r"\bIndia\b", "the US", text)
+    # "Indian" as noun (a person) vs adjective — only replace adjectival forms
+    text = re.sub(r"\bIndian\b(?=\s+(?:investor|household|family|professional|context|market|exchange|stock|crypto|tax|finance|income|expense|rupee|investor|middle))", "US", text)
+    text = re.sub(r"\ban Indian\b", "a US", text)
+    text = re.sub(r"\blakhs\b", "hundreds of thousands of dollars", text)
+    text = re.sub(r"\blakh\b", "hundred thousand dollars", text)
+    text = re.sub(r"\bcrores\b", "tens of millions of dollars", text)
+    text = re.sub(r"\bcrore\b", "ten million dollars", text)
     return text
 
 
@@ -1285,44 +1295,44 @@ def _build_attention_hook(category: str, subtopic: str) -> str:
     """Sharp 3-4 sentence hook — captures viewer attention in the first 15 seconds."""
     hooks = {
         "Stock Market Basics": (
-            f"What if I told you that an ordinary Indian investing just 5,000 rupees every month"
-            f" 15 years ago, without picking a single stock, would have over 40 lakh rupees today?"
-            f" That is not a theory. That is real data from the Indian stock market."
+            f"What if I told you that someone investing just $500 every month 15 years ago,"
+            f" without picking a single stock, would have over $250,000 today?"
+            f" That is not a theory. That is real data from the S&P 500."
             f" And by the end of this video, you will have exactly that system available to you."
         ),
         "Mutual Funds": (
-            f"Here is a fact that quietly cost millions of Indian investors crores of rupees:"
-            f" over 90 percent of actively managed mutual funds in India failed to beat a simple"
-            f" index fund over the last 10 years. Once you understand why, you will make"
+            f"Here is a fact that quietly costs millions of Americans tens of thousands of dollars:"
+            f" over 90 percent of actively managed mutual funds failed to beat a simple"
+            f" S&P 500 index fund over the last 15 years. Once you understand why, you will make"
             f" dramatically smarter investment choices starting today."
         ),
         "Personal Finance": (
-            f"The average Indian household is losing over 2 lakh rupees every single year to three"
+            f"The average American household is losing over $5,000 every single year to three"
             f" specific financial mistakes. Not because they are careless or not earning enough,"
             f" but simply because nobody taught them these three things."
             f" Today we are going to fix all three of them in one video."
         ),
         "Tax Planning": (
-            f"Most salaried Indians are quietly overpaying their income tax by anywhere between"
-            f" 20,000 and 1 lakh rupees every single year, completely unnecessarily."
+            f"Most Americans are quietly overpaying their federal taxes by anywhere between"
+            f" $2,000 and $10,000 every single year, completely unnecessarily."
             f" Not because of any mistake, but simply because they do not know about the"
-            f" deductions that are sitting right there, waiting to be claimed."
+            f" deductions sitting right there, waiting to be claimed."
             f" Today I show you exactly where that money is."
         ),
         "Cryptocurrency": (
             f"Here is the honest truth nobody in the crypto world wants to say out loud:"
-            f" 95 percent of Indian crypto investors have lost money. But the 5 percent who"
+            f" 95 percent of retail crypto investors have lost money. But the 5 percent who"
             f" made life-changing returns did not get lucky. They followed specific principles."
             f" Today I am walking you through those exact principles."
         ),
         "Real Estate": (
-            f"Is buying a flat in India a smart investment or the biggest financial trap of"
+            f"Is buying a house right now a smart investment or the biggest financial trap of"
             f" your life? Most people I ask get this completely wrong, and it costs them"
-            f" 30 lakh to over a crore rupees over their lifetime. Today you will get the"
-            f" honest, data-backed answer. Not the answer a broker wants you to hear."
+            f" $100,000 or more over their lifetime. Today you will get the"
+            f" honest, data-backed answer. Not the answer a real estate agent wants you to hear."
         ),
         "Budgeting": (
-            f"A study of thousands of Indian households found that people who follow a simple"
+            f"A study of thousands of American households found that people who follow a simple"
             f" written budget save 43 percent more every month than those who do not."
             f" Not 5 percent more. 43 percent more. Same income, same city, same expenses,"
             f" completely different outcomes. I am going to give you that system right now."
@@ -1348,7 +1358,7 @@ def _build_subscribe_outro() -> str:
         f"\n\nAnd honestly, every single day we publish a brand new finance education video"
         f" right here on {CHANNEL_BRANDING}. Completely free. No paywalls, no courses to buy."
         f" Topics like investing, mutual funds, tax saving, budgeting, and everything in between,"
-        f" all explained simply and practically for Indians like you and me."
+        f" all explained simply and practically so you can take action today."
         f"\n\nIf you have questions, drop them in the comments below. I read every single one"
         f" and reply to as many as I can. Your financial future is absolutely worth investing"
         f" this time in. Thank you so much for watching. I will see you tomorrow,"
