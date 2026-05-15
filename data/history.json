@@ -622,6 +622,32 @@
         7821605,
         7947423
       ]
+    },
+    {
+      "date": "2026-05-15",
+      "weekday": 4,
+      "category": "Cryptocurrency",
+      "subtopic": "How Blockchain Technology Works",
+      "title": "How Blockchain Technology Works | What investors Must Know",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260515.mp4",
+      "video_id": "YO90tzHRPto",
+      "clips_used": [
+        8370147,
+        34408323,
+        26689446,
+        8369947,
+        9588293,
+        8370050,
+        35518228,
+        8370537,
+        9588284,
+        9421909,
+        9588286,
+        8370530,
+        8370044,
+        9588295,
+        8369913
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -1104,7 +1130,22 @@
     7055344,
     7545831,
     7821605,
-    7947423
+    7947423,
+    8370147,
+    34408323,
+    26689446,
+    8369947,
+    9588293,
+    8370050,
+    35518228,
+    8370537,
+    9588284,
+    9421909,
+    9588286,
+    8370530,
+    8370044,
+    9588295,
+    8369913
   ],
   "used_pexels_images": []
 }
