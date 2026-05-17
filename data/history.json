@@ -719,6 +719,22 @@
         5849635,
         34335939
       ]
+    },
+    {
+      "date": "2026-05-17",
+      "weekday": 6,
+      "category": "Budgeting",
+      "subtopic": "The 50-30-20 Budgeting Rule for Indians",
+      "title": "The 50-30-20 Budgeting Rule for you | Take Control of Your Money in 2026",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260517.mp4",
+      "video_id": "0PBYvc3uBX4",
+      "clips_used": [
+        5849625,
+        7947422,
+        8275714,
+        7947406,
+        14609095
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -1276,7 +1292,12 @@
     30546067,
     7577616,
     5849635,
-    34335939
+    34335939,
+    5849625,
+    7947422,
+    8275714,
+    7947406,
+    14609095
   ],
   "used_pexels_images": []
 }
