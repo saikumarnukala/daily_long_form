@@ -955,6 +955,35 @@
         30546063,
         32477796
       ]
+    },
+    {
+      "date": "2026-05-24",
+      "weekday": 6,
+      "category": "Budgeting",
+      "subtopic": "Zero-Based Budgeting Explained Simply",
+      "title": "Zero-Based Budgeting Explained Simply | Take Control of Your Money in 2026",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260524.mp4",
+      "video_id": "b1q59YkdWNQ",
+      "clips_used": [
+        7947427,
+        7148540,
+        7947451,
+        7947420,
+        7552429,
+        7947428,
+        7651886,
+        7947459,
+        6780084,
+        7164228,
+        7947453,
+        7552421,
+        7659845,
+        9305602,
+        9305611,
+        7947400,
+        7688067,
+        8478753
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -1671,7 +1700,25 @@
     31964998,
     31016013,
     30546063,
-    32477796
+    32477796,
+    7947427,
+    7148540,
+    7947451,
+    7947420,
+    7552429,
+    7947428,
+    7651886,
+    7947459,
+    6780084,
+    7164228,
+    7947453,
+    7552421,
+    7659845,
+    9305602,
+    9305611,
+    7947400,
+    7688067,
+    8478753
   ],
   "used_pexels_images": []
 }
