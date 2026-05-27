@@ -1050,6 +1050,19 @@
         18070270,
         5743048
       ]
+    },
+    {
+      "date": "2026-05-27",
+      "weekday": 2,
+      "category": "Personal Finance",
+      "subtopic": "Smart Ways to Save Money Every Month",
+      "title": "Smart Ways to Save Money Every Month | Practical Money Guide for you",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260527.mp4",
+      "video_id": "qAG8qAQbz6s",
+      "clips_used": [
+        6698944,
+        32024410
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -1828,7 +1841,9 @@
     31602655,
     7692848,
     18070270,
-    5743048
+    5743048,
+    6698944,
+    32024410
   ],
   "used_pexels_images": []
 }
