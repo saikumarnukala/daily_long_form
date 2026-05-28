@@ -1063,6 +1063,18 @@
         6698944,
         32024410
       ]
+    },
+    {
+      "date": "2026-05-28",
+      "weekday": 3,
+      "category": "Tax Planning",
+      "subtopic": "New Tax Regime vs Old Tax Regime",
+      "title": "New Tax Regime vs Old Tax Regime | Save More Tax Legally",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260528.mp4",
+      "video_id": "7oePfL66gzw",
+      "clips_used": [
+        7804848
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -1843,7 +1855,8 @@
     18070270,
     5743048,
     6698944,
-    32024410
+    32024410,
+    7804848
   ],
   "used_pexels_images": []
 }
