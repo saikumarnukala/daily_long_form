@@ -1177,6 +1177,19 @@
         31965109,
         31568486
       ]
+    },
+    {
+      "date": "2026-05-31",
+      "weekday": 6,
+      "category": "Budgeting",
+      "subtopic": "How to Track Every Rupee You Spend",
+      "title": "How to Track Every Rupee You Spend | Take Control of Your Money in 2026",
+      "video_path": "/home/runner/work/daily_long_form/daily_long_form/assets/output/video_20260531.mp4",
+      "video_id": "rekfzXLbdtk",
+      "clips_used": [
+        4393480,
+        6282123
+      ]
     }
   ],
   "used_pexels_videos": [
@@ -2038,7 +2051,9 @@
     30934592,
     30431366,
     31965109,
-    31568486
+    31568486,
+    4393480,
+    6282123
   ],
   "used_pexels_images": []
 }
