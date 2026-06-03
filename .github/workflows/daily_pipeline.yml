@@ -60,6 +60,8 @@ jobs:
             imagemagick \
             ffmpeg \
             fonts-dejavu-core \
+            fonts-dejavu-extra \
+            fonts-liberation \
             libgl1
 
       # ── 5. Allow ImageMagick to write files (required for MoviePy) ────────
@@ -75,7 +77,22 @@ jobs:
       # ── 7. Verify critical imports ──────────────────────────────────────
       - name: Verify imports
         run: |
-          python -c "import PIL; import requests; print('All imports OK')"
+          python -c "import PIL; import requests; from src.services import tts_service, thumbnail_service; print('All imports OK')"
+
+      # ── 7b. Verify required secrets (values not printed) ───────────────
+      - name: Verify API secrets
+        env:
+          DEEPGRAM_API_KEY: ${{ secrets.DEEPGRAM_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python -c "
+          import os, sys
+          for name in ('DEEPGRAM_API_KEY', 'PEXELS_API_KEY'):
+              if not os.environ.get(name, '').strip():
+                  print(f'Missing GitHub secret: {name}', file=sys.stderr)
+                  sys.exit(1)
+          print('Required API secrets present')
+          "
 
       # ── 8. Run the pipeline ─────────────────────────────────────────────
       - name: Run pipeline
