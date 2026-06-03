@@ -75,7 +75,7 @@ jobs:
       # ── 7. Verify critical imports ──────────────────────────────────────
       - name: Verify imports
         run: |
-          python -c "import edge_tts; import PIL; import requests; print('All imports OK')"
+          python -c "import PIL; import requests; print('All imports OK')"
 
       # ── 8. Run the pipeline ─────────────────────────────────────────────
       - name: Run pipeline
@@ -84,8 +84,7 @@ jobs:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          DEEPGRAM_API_KEY: ${{ secrets.DEEPGRAM_API_KEY }}
         run: |
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
             python -m src.main --dry-run --cleanup-temp

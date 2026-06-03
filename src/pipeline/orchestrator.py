@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from src.config import CHANNEL_BRANDING, PATHS
+from src.config import CHANNEL_BRANDING, PATHS, TTS_WEEKDAY_NAMES, voice_for_weekday
 from src.services import (
     media_service,
     script_service,
@@ -90,11 +90,17 @@ class PipelineOrchestrator:
     def _step_tts(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 3: TTS Generation ───")
         weekday: int = context["topic_data"]["weekday"]
+        voice = voice_for_weekday(weekday)
+        logger.info(
+            "TTS voice for %s: '%s'",
+            TTS_WEEKDAY_NAMES[weekday],
+            voice,
+        )
         audio_path = str(get_temp_path("narration.mp3"))
         result = tts_service.generate_tts(
             text=context["script_data"]["full_text"],
             output_path=audio_path,
-            voice_index=weekday,  # 0-6 → unique voice per day
+            voice_index=weekday,
         )
         context["audio_path"] = result["audio_path"]
         context["audio_duration"] = result["duration_seconds"]
@@ -129,6 +135,7 @@ class PipelineOrchestrator:
             keyword=keyword,
             title=title,
             output_path=thumb_path,
+            category=context["topic_data"].get("category"),
         )
         context["thumbnail_path"] = thumb_path
 

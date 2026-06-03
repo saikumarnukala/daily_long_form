@@ -1,81 +1,66 @@
 ﻿"""
-TTS (Text-to-Speech) service using Microsoft Edge TTS.
+TTS service using Deepgram Aura-2.
 
-Uses the edge-tts library (free, no API key required).
-Voice selection alternates between female and male English voices
-based on the weekday parity to add variety across videos.
-
-Long scripts are split into ~400-word chunks to avoid WebSocket timeouts,
-then concatenated with ffmpeg.
-
-Subtitles are generated from the text + audio duration (time-based, always works).
+Scripts are split by emotion markers, then by Aura's per-request character limit.
+Emotion is conveyed via speaking speed and punctuation (Aura-2 is context-aware).
 """
-import asyncio
 import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 
-import edge_tts
-
 from src.config import (
-    AZURE_SPEECH_KEY, AZURE_SPEECH_REGION,
-    TTS_PITCH, TTS_RATE, TTS_VOICES, TTS_VOLUME, TTS_WORDS_PER_MINUTE,
+    DEEPGRAM_API_KEY,
+    DEEPGRAM_TTS_API_URL,
+    DEEPGRAM_TTS_MAX_CHARS,
+    TTS_WEEKDAY_NAMES,
+    TTS_WORDS_PER_MINUTE,
+    voice_for_weekday,
 )
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Windows requires SelectorEventLoop for aiohttp WebSockets used by edge-tts
-if sys.platform.startswith("win"):
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-_CHUNK_WORDS = 400
-
-# ─── Emotion via mstts:express-as (Azure) or rate/pitch fallback ────────────
-# Azure Cognitive Services TTS supports real mstts:express-as styles.
-# When AZURE_SPEECH_KEY is not set, prosody rate/pitch is used instead.
-#
-# (regex_start, regex_end_exclusive, ssml_style)
 _EMOTION_SPLITS = [
     (r"Ha!", r"But here is where", "cheerful"),
     (r"But here is where", r"Well, that changes right now", "sad"),
+    (r"Well, that changes right now", None, "engaged"),  # uplifting close
 ]
 
-# Prosody fallback values when Azure is not configured
-_STYLE_PROSODY = {
-    "cheerful": ("+20%", "+15Hz"),
-    "sad":      ("-10%", "-10Hz"),
+# Aura-2 speed (0.7–1.5) + phrasing — see Deepgram Aura-2 formatting docs
+_STYLE_CONFIG = {
+    "cheerful": {"speed": 1.18},
+    "sad": {"speed": 0.82},
+    "engaged": {"speed": 1.06},
 }
 
 
-def _split_by_emotion(text: str):
-    """Return list of (chunk_text, style) tuples.
-
-    style is an mstts:express-as style string ('cheerful', 'sad') or None for
-    default delivery.  Falls back to [(text, None)] if markers are not found.
-    """
+def _split_by_emotion(text: str) -> List[Tuple[str, Optional[str]]]:
     flat = " ".join(text.split())
 
     boundaries = []
     for start_pat, end_pat, style in _EMOTION_SPLITS:
         m_start = re.search(start_pat, flat)
-        m_end = re.search(end_pat, flat)
-        if m_start and m_end and m_start.start() < m_end.start():
-            boundaries.append((m_start.start(), m_end.start(), style))
+        if not m_start:
+            continue
+        if end_pat:
+            m_end = re.search(end_pat, flat)
+            if m_end and m_start.start() < m_end.start():
+                boundaries.append((m_start.start(), m_end.start(), style))
+        else:
+            boundaries.append((m_start.start(), len(flat), style))
 
     if not boundaries:
         return [(flat, None)]
 
     boundaries.sort(key=lambda x: x[0])
-    parts = []
+    parts: List[Tuple[str, Optional[str]]] = []
     cursor = 0
     for seg_start, seg_end, style in boundaries:
         if seg_start > cursor:
@@ -88,77 +73,147 @@ def _split_by_emotion(text: str):
     return [(p, s) for p, s in parts if p]
 
 
-def _split_text(text: str, max_words: int = _CHUNK_WORDS) -> List[str]:
+def _split_by_char_limit(text: str, max_chars: int = DEEPGRAM_TTS_MAX_CHARS) -> List[str]:
     text = " ".join(text.split())
-    words = text.split(" ")
-    chunks: List[str] = []
-    current: List[str] = []
-    for word in words:
-        current.append(word)
-        if len(current) >= max_words and word.endswith((".", "?", "!", "...", '."', '?"', '!"')):
-            chunks.append(" ".join(current))
-            current = []
+    if len(text) <= max_chars:
+        return [text]
+
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    segments: List[str] = []
+    current = ""
+
+    for sentence in sentences:
+        if not sentence:
+            continue
+        candidate = f"{current} {sentence}".strip() if current else sentence
+        if len(candidate) <= max_chars:
+            current = candidate
+            continue
+        if current:
+            segments.append(current)
+            current = ""
+        if len(sentence) <= max_chars:
+            current = sentence
+            continue
+        words = sentence.split()
+        buf: List[str] = []
+        for word in words:
+            trial = (" ".join(buf + [word])).strip()
+            if len(trial) <= max_chars:
+                buf.append(word)
+            else:
+                if buf:
+                    segments.append(" ".join(buf))
+                buf = [word] if len(word) <= max_chars else []
+                if len(word) > max_chars:
+                    for i in range(0, len(word), max_chars):
+                        segments.append(word[i : i + max_chars])
+        if buf:
+            current = " ".join(buf)
+
     if current:
-        chunks.append(" ".join(current))
-    return chunks
+        segments.append(current)
+
+    return [s for s in segments if s]
 
 
-def _build_azure_ssml(text: str, voice: str, style: str = None) -> str:
-    """Build SSML for Azure Cognitive Services TTS REST API."""
-    from xml.sax.saxutils import escape
-    body = escape(text)
-    if style:
-        body = f'<mstts:express-as style="{style}">{body}</mstts:express-as>'
-    return (
-        '<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
-        'xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">'
-        f'<voice name="{voice}">'
-        f'{body}'
-        '</voice>'
-        '</speak>'
-    )
+def _style_speed(style: Optional[str]) -> float:
+    if not style:
+        return 1.0
+    return _STYLE_CONFIG.get(style, {}).get("speed", 1.0)
 
 
-def _azure_synthesise(text: str, output_path: str, voice: str, style: str = None) -> None:
-    """Synthesise via Azure Cognitive Services TTS REST API."""
-    url = f"https://{AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
-    headers = {
-        "Ocp-Apim-Subscription-Key": AZURE_SPEECH_KEY,
-        "Content-Type": "application/ssml+xml",
-        "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
-        "User-Agent": "long_videos_daily",
+def _prepare_text_for_style(text: str, style: Optional[str]) -> str:
+    """Tune punctuation and pacing so Aura-2 sounds more expressive."""
+    text = " ".join(text.split())
+    if style == "cheerful":
+        text = text.replace("properly?", "properly!")
+        text = text.replace("years ago.", "years ago!")
+        # Short beats help energetic delivery
+        text = text.replace("really simple.", "really simple!")
+        return text
+    if style == "sad":
+        text = text.replace("pause for a second.", "pause for a second...")
+        text = text.replace("Genuinely sad.", "Genuinely sad...")
+        text = text.replace(
+            "every single day.",
+            "every single day...",
+        )
+        text = text.replace(
+            "explained it to them clearly.",
+            "explained it to them clearly...",
+        )
+        return text
+    if style == "engaged":
+        text = text.replace(
+            "right now.",
+            "right now!",
+        )
+        text = text.replace(
+            "step by step.",
+            "step by step!",
+        )
+        return text
+    return text
+
+
+def _deepgram_synthesise(
+    text: str,
+    output_mp3_path: str,
+    model: str,
+    style: Optional[str] = None,
+) -> None:
+    if not DEEPGRAM_API_KEY:
+        raise RuntimeError(
+            "DEEPGRAM_API_KEY is not set. Get a key at https://console.deepgram.com/"
+        )
+    if len(text) > DEEPGRAM_TTS_MAX_CHARS:
+        raise ValueError(
+            f"TTS segment too long ({len(text)} chars, max {DEEPGRAM_TTS_MAX_CHARS})"
+        )
+
+    speed = _style_speed(style)
+    params = {
+        "model": model,
+        "encoding": "mp3",
+        "speed": str(speed),
     }
-    ssml = _build_azure_ssml(text, voice, style)
-    resp = requests.post(url, headers=headers, data=ssml.encode("utf-8"), timeout=60)
+    resp = requests.post(
+        DEEPGRAM_TTS_API_URL,
+        headers={
+            "Authorization": f"Token {DEEPGRAM_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        params=params,
+        json={"text": text},
+        timeout=180,
+    )
     if resp.status_code != 200:
-        raise RuntimeError(f"Azure TTS HTTP {resp.status_code}: {resp.text[:200]}")
-    with open(output_path, "wb") as fh:
+        raise RuntimeError(
+            f"Deepgram TTS HTTP {resp.status_code}: {resp.text[:300]}"
+        )
+
+    with open(output_mp3_path, "wb") as fh:
         fh.write(resp.content)
 
 
-async def _synthesise_chunk_edge(text: str, output_path: str, voice: str,
-                                 rate: str = TTS_RATE, pitch: str = TTS_PITCH) -> None:
-    communicate = edge_tts.Communicate(
-        text=text, voice=voice, rate=rate, volume=TTS_VOLUME, pitch=pitch
-    )
-    await communicate.save(output_path)
-
-
-def _run_synthesis(text: str, output_path: str, voice: str, style: str = None) -> None:
-    """Synthesise one chunk. Uses Azure TTS if key is configured, else edge-tts."""
-    use_azure = bool(AZURE_SPEECH_KEY)
+def _run_synthesis(
+    text: str,
+    output_path: str,
+    model: str,
+    style: Optional[str] = None,
+) -> None:
+    prepared = _prepare_text_for_style(text, style)
     for attempt in range(1, 4):
         try:
-            if use_azure:
-                _azure_synthesise(text, output_path, voice, style=style)
-            else:
-                rate, pitch = _STYLE_PROSODY.get(style, (TTS_RATE, TTS_PITCH))
-                asyncio.run(_synthesise_chunk_edge(text, output_path, voice, rate=rate, pitch=pitch))
+            _deepgram_synthesise(prepared, output_path, model, style=style)
             return
         except Exception as exc:
             if attempt < 3:
                 wait = 2 ** attempt
-                logger.warning("TTS attempt %d failed (%s). Retrying in %ds...", attempt, exc, wait)
+                logger.warning(
+                    "TTS attempt %d failed (%s). Retrying in %ds...", attempt, exc, wait
+                )
                 time.sleep(wait)
             else:
                 raise
@@ -170,7 +225,10 @@ def _concat_mp3s(chunk_paths: List[str], output_path: str) -> None:
         with os.fdopen(list_fd, "w") as fh:
             for p in chunk_paths:
                 fh.write(f"file '{p.replace(chr(92), '/')}'\n")
-        cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", list_path, "-c", "copy", output_path]
+        cmd = [
+            "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+            "-i", list_path, "-c", "copy", output_path,
+        ]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             raise RuntimeError(f"ffmpeg concat failed:\n{result.stderr}")
@@ -193,54 +251,70 @@ def _generate_timed_srt(text: str, audio_duration_s: float, srt_path: str) -> No
     words = clean.split()
     if not words or audio_duration_s <= 0:
         return
-    GROUP = 7
+    group = 7
     words_per_ms = len(words) / (audio_duration_s * 1000)
     lines: List[str] = []
-    for idx in range(0, len(words), GROUP):
-        group = words[idx: idx + GROUP]
+    for idx in range(0, len(words), group):
+        chunk_words = words[idx : idx + group]
         start_ms = int(idx / words_per_ms)
-        end_ms = int((idx + len(group)) / words_per_ms)
-        n = idx // GROUP + 1
-        lines.append(f"{n}\n{_ms_to_srt_ts(start_ms)} --> {_ms_to_srt_ts(end_ms)}\n{' '.join(group)}\n")
+        end_ms = int((idx + len(chunk_words)) / words_per_ms)
+        n = idx // group + 1
+        lines.append(
+            f"{n}\n{_ms_to_srt_ts(start_ms)} --> {_ms_to_srt_ts(end_ms)}\n"
+            f"{' '.join(chunk_words)}\n"
+        )
     with open(srt_path, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
     logger.info("Subtitles written: %d lines -> %s", len(lines), srt_path)
 
 
 def generate_tts(text: str, output_path: str, voice_index: int = 0) -> Dict[str, Any]:
-    voice = TTS_VOICES[voice_index % len(TTS_VOICES)]
-    logger.info("Generating TTS with voice '%s' -> %s", voice, output_path)
+    weekday = voice_index % 7
+    model = voice_for_weekday(weekday)
+    day_name = TTS_WEEKDAY_NAMES[weekday]
+    logger.info(
+        "Generating TTS | %s (weekday %d) | model '%s' -> %s",
+        day_name, weekday, model, output_path,
+    )
     out_path = Path(output_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    use_azure = bool(AZURE_SPEECH_KEY)
-    logger.info("TTS backend: %s", "Azure Cognitive Services" if use_azure else "edge-tts (fallback)")
+    logger.info("TTS backend: Deepgram Aura-2")
 
-    # Split by emotional section first, then by word-count within each section
     emotion_sections = _split_by_emotion(text)
-    all_chunks: List[tuple] = []  # (text, style)
+    all_chunks: List[Tuple[str, Optional[str]]] = []
     for section_text, style in emotion_sections:
-        for chunk in _split_text(section_text):
-            all_chunks.append((chunk, style))
+        for segment in _split_by_char_limit(section_text):
+            all_chunks.append((segment, style))
 
-    logger.info("Script: %d emotion section(s) -> %d TTS chunk(s) total.",
-                len(emotion_sections), len(all_chunks))
+    logger.info(
+        "Script: %d emotion section(s) -> %d TTS segment(s) (max %d chars each).",
+        len(emotion_sections),
+        len(all_chunks),
+        DEEPGRAM_TTS_MAX_CHARS,
+    )
 
     tmp_dir = out_path.parent
     chunk_paths: List[str] = []
     try:
         for i, (chunk_text, style) in enumerate(all_chunks):
             chunk_path = str(tmp_dir / f"_tts_chunk_{i:03d}.mp3")
-            logger.info("  Chunk %d/%d (%d words, style=%s)...",
-                        i + 1, len(all_chunks), len(chunk_text.split()), style or "default")
-            _run_synthesis(chunk_text, chunk_path, voice, style=style)
+            logger.info(
+                "  Segment %d/%d (%d chars, style=%s, speed=%s)...",
+                i + 1,
+                len(all_chunks),
+                len(chunk_text),
+                style or "default",
+                _style_speed(style),
+            )
+            _run_synthesis(chunk_text, chunk_path, model, style=style)
             chunk_paths.append(chunk_path)
 
         if len(chunk_paths) == 1:
             shutil.move(chunk_paths[0], str(out_path))
             chunk_paths.clear()
         else:
-            logger.info("Concatenating %d chunks -> %s", len(chunk_paths), output_path)
+            logger.info("Concatenating %d segments -> %s", len(chunk_paths), output_path)
             _concat_mp3s(chunk_paths, str(out_path))
     finally:
         for p in chunk_paths:
@@ -264,4 +338,8 @@ def generate_tts(text: str, output_path: str, voice_index: int = 0) -> Dict[str,
         srt_path = None
 
     logger.info("TTS complete. Words: %d | Estimated duration: %.0fs", word_count, duration_estimate)
-    return {"audio_path": str(out_path), "duration_seconds": duration_estimate, "subtitle_path": srt_path}
+    return {
+        "audio_path": str(out_path),
+        "duration_seconds": duration_estimate,
+        "subtitle_path": srt_path,
+    }

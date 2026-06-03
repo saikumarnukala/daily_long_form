@@ -235,7 +235,7 @@ To trigger manually:
 - Target: ~1800–2200 words ≈ 9–11 minutes of narration
 
 ### TTS (Text-to-Speech)
-- Uses `edge-tts` (Microsoft Edge TTS — completely free)
+- Uses **Deepgram Aura-2 TTS** (`DEEPGRAM_API_KEY` required; $200 signup credits typical)
 - Alternates between `en-IN-NeerjaNeural` (female) and `en-IN-PrabhatNeural` (male) by day parity
 - Falls back to the other voice on failure
 
@@ -303,7 +303,8 @@ Edit `src/services/script_service.py`. Each `_template_*` function returns a `se
 |-------|----------|
 | `PEXELS_API_KEY not set` | Add key to `.env` or GitHub Secrets |
 | `YOUTUBE_REFRESH_TOKEN not set` | Run `python scripts/get_youtube_token.py` |
-| `edge-tts connection error` | Check internet; some ISPs block IPv6. Try setting `EDGETTS_TRUST_ENV=1` |
+| `Deepgram TTS HTTP 401/403` | Check `DEEPGRAM_API_KEY` in `.env` and GitHub Actions secrets |
+| `Deepgram TTS HTTP 429` | Rate limit or credits exhausted; check console.deepgram.com |
 | `MoviePy TextClip error` | Ensure ImageMagick is installed: `sudo apt-get install imagemagick` |
 | `No clips downloaded` | Check `PEXELS_API_KEY` and Pexels quota (25,000 req/month free) |
 | `Token expired` | Re-run `get_youtube_token.py` and update `YOUTUBE_REFRESH_TOKEN` secret |

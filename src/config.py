@@ -34,34 +34,42 @@ PATHS = {
 # ─────────────────────────── API Keys ───────────────────────────
 PEXELS_API_KEY: str = os.getenv("PEXELS_API_KEY", "")
 YOUTUBE_CLIENT_ID: str = os.getenv("YOUTUBE_CLIENT_ID", "")
-YOUTUBE_CLIENT_SECRET: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")  # raw OAuth client secret string (not JSON)
+YOUTUBE_CLIENT_SECRET: str = os.getenv("YOUTUBE_CLIENT_SECRET", "")
 YOUTUBE_REFRESH_TOKEN: str = os.getenv("YOUTUBE_REFRESH_TOKEN", "")
 
-# Azure Cognitive Services Speech — enables real mstts:express-as emotion styles.
-# Free tier: 500,000 chars/month. Leave blank to fall back to edge-tts.
-AZURE_SPEECH_KEY: str = os.getenv("AZURE_SPEECH_KEY", "")
-AZURE_SPEECH_REGION: str = os.getenv("AZURE_SPEECH_REGION", "eastus")
+# Deepgram Aura TTS — https://developers.deepgram.com/docs/text-to-speech
+DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY", "")
+DEEPGRAM_TTS_API_URL: str = "https://api.deepgram.com/v1/speak"
+DEEPGRAM_TTS_MAX_CHARS: int = 1900  # Aura-2 allows up to 2000 chars per request
 
 # ─────────────────────────── API Endpoints ───────────────────────────
 PEXELS_VIDEO_API = "https://api.pexels.com/videos/search"
 PEXELS_PHOTO_API = "https://api.pexels.com/v1/search"
 
-# ─────────────────────────── TTS ───────────────────────────
-# One distinct global voice per weekday (0=Mon … 6=Sun).
-# All are top-rated explainer/narrator voices; US voices also get SSML emotion styles.
-TTS_VOICES = [
-    "en-US-AriaNeural",    # 0 Mon — Female, US — warm storytelling, SSML emotions ✓
-    "en-US-GuyNeural",     # 1 Tue — Male,   US — newscast/explainer, SSML emotions ✓
-    "en-US-EricNeural",    # 2 Wed — Male,   US — authoritative narrator, SSML emotions ✓
-    "en-US-JennyNeural",   # 3 Thu — Female, US — friendly/educational, SSML emotions ✓
-    "en-US-AvaNeural",     # 4 Fri — Female, US — expressive presenter, SSML emotions ✓
-    "en-US-RogerNeural",   # 5 Sat — Male,   US — engaging storyteller, SSML emotions ✓
-    "en-GB-SoniaNeural",   # 6 Sun — Female, UK — calm/authoritative, SSML emotions ✓
+# ─────────────────────────── TTS (Deepgram Aura-2) ───────────────────────────
+# One Aura-2 model per weekday (0=Mon … 6=Sun).
+TTS_WEEKDAY_NAMES = [
+    "Monday", "Tuesday", "Wednesday", "Thursday",
+    "Friday", "Saturday", "Sunday",
 ]
-TTS_RATE = "+0%"
-TTS_VOLUME = "+0%"
-TTS_PITCH = "+0Hz"
-TTS_WORDS_PER_MINUTE = 175  # approx. speed for timing calculations
+TTS_VOICE_BY_WEEKDAY: dict[int, str] = {
+    0: "aura-2-thalia-en",      # Mon — feminine, energetic
+    1: "aura-2-apollo-en",      # Tue — masculine, confident
+    2: "aura-2-odysseus-en",    # Wed — masculine, professional
+    3: "aura-2-andromeda-en",   # Thu — feminine, expressive
+    4: "aura-2-helena-en",      # Fri — feminine, warm
+    5: "aura-2-arcas-en",       # Sat — masculine, smooth
+    6: "aura-2-draco-en",        # Sun — masculine, British
+}
+TTS_VOICES = [TTS_VOICE_BY_WEEKDAY[i] for i in range(7)]
+
+
+def voice_for_weekday(weekday: int) -> str:
+    """Return the Deepgram Aura-2 model ID for weekday 0–6."""
+    return TTS_VOICE_BY_WEEKDAY[weekday % 7]
+
+
+TTS_WORDS_PER_MINUTE = 175
 
 # ─────────────────────────── Video Specs ───────────────────────────
 VIDEO_WIDTH = 1920
@@ -75,7 +83,6 @@ THUMBNAIL_WIDTH = 1280
 THUMBNAIL_HEIGHT = 720
 
 # ─────────────────────────── 7-Day Topic Schedule ───────────────────────────
-# Keyed by weekday integer: 0 = Monday … 6 = Sunday
 TOPIC_SCHEDULE = {
     0: {
         "category": "Stock Market Basics",
@@ -150,14 +157,14 @@ TOPIC_SCHEDULE = {
 }
 
 # ─────────────────────────── YouTube Metadata ───────────────────────────
-YOUTUBE_CATEGORY_ID = "22"        # People & Blogs
+YOUTUBE_CATEGORY_ID = "22"
 YOUTUBE_DEFAULT_LANGUAGE = "en"
 YOUTUBE_PRIVACY_STATUS = "public"
 CHANNEL_BRANDING = "Daksha Luma"
 
 # ─────────────────────────── Pipeline Settings ───────────────────────────
-MAX_HISTORY_LOOKBACK = 4           # avoid repeating a subtopic within 4 cycles
-PEXELS_CLIPS_BUFFER_FACTOR = 1.3   # download 30% more clip duration than needed
-PEXELS_MAX_RESULTS_PER_QUERY = 15  # results per Pexels API call
+MAX_HISTORY_LOOKBACK = 4
+PEXELS_CLIPS_BUFFER_FACTOR = 1.3
+PEXELS_MAX_RESULTS_PER_QUERY = 15
 RETRY_MAX_ATTEMPTS = 3
 RETRY_BACKOFF = 2.0
