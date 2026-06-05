@@ -12,7 +12,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
-from src.config import CHANNEL_BRANDING, PATHS, TTS_WEEKDAY_NAMES, voice_for_weekday
+from src.config import (
+    CHANNEL_BRANDING,
+    PATHS,
+    PEXELS_MAX_TRACKED_USED_IDS,
+    TTS_WEEKDAY_NAMES,
+    voice_for_weekday,
+)
 from src.services import (
     media_service,
     script_service,
@@ -69,11 +75,13 @@ class PipelineOrchestrator:
         }
         self.history["videos"].append(entry)
 
-        # Merge used clip IDs
+        # Merge used clip IDs (rolling window so the catalog can rotate)
         used_clips = self.history.setdefault("used_pexels_videos", [])
         for vid_id in context.get("clips_used_ids", []):
             if vid_id not in used_clips:
                 used_clips.append(vid_id)
+        if len(used_clips) > PEXELS_MAX_TRACKED_USED_IDS * 2:
+            self.history["used_pexels_videos"] = used_clips[-PEXELS_MAX_TRACKED_USED_IDS * 2 :]
 
         self._save_history()
 

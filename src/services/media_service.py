@@ -3,20 +3,25 @@ Media (video) fetching service — Pexels Videos API only.
 
 Responsibilities:
   - Search Pexels for video clips matching a keyword.
-  - Filter out already-used clip IDs (deduplication).
+  - Filter out recently-used clip IDs (rolling dedup window).
+  - Reuse older clips when the Pexels pool is exhausted.
   - Download enough clips to cover the required audio duration + 30% buffer.
   - Return a list of local MP4 file paths.
 """
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import requests
 
 from src.config import (
     PEXELS_API_KEY,
     PEXELS_CLIPS_BUFFER_FACTOR,
+    PEXELS_FALLBACK_KEYWORDS,
+    PEXELS_MAX_PAGES_FALLBACK,
+    PEXELS_MAX_PAGES_PER_KEYWORD,
     PEXELS_MAX_RESULTS_PER_QUERY,
+    PEXELS_MAX_TRACKED_USED_IDS,
     PEXELS_VIDEO_API,
 )
 from src.utils.logger import get_logger
@@ -31,9 +36,7 @@ _HEADERS = {"Authorization": PEXELS_API_KEY}
 
 @retry(max_attempts=3, backoff=2.0, exceptions=(requests.RequestException, ValueError))
 def _search_pexels_videos(keyword: str, page: int = 1) -> List[Dict[str, Any]]:
-    """
-    Query Pexels Videos API for *keyword* and return a list of video objects.
-    """
+    """Query Pexels Videos API for *keyword* and return a list of video objects."""
     params = {
         "query": keyword,
         "per_page": PEXELS_MAX_RESULTS_PER_QUERY,
@@ -41,6 +44,8 @@ def _search_pexels_videos(keyword: str, page: int = 1) -> List[Dict[str, Any]]:
         "orientation": "landscape",
     }
     resp = requests.get(PEXELS_VIDEO_API, headers=_HEADERS, params=params, timeout=30)
+    if resp.status_code in (401, 403):
+        raise ValueError(f"Pexels API auth failed (HTTP {resp.status_code})")
     resp.raise_for_status()
     data = resp.json()
     videos = data.get("videos", [])
@@ -50,14 +55,12 @@ def _search_pexels_videos(keyword: str, page: int = 1) -> List[Dict[str, Any]]:
 
 def _get_best_video_file(video: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
-    Pick the highest-quality HD video file from a Pexels video object.
-    Prefers ≥1280 px wide files; falls back to the widest available.
+    Pick a CI-friendly HD file from a Pexels video object.
+    Prefers 1280x720; accepts wider SD; falls back to widest available.
     """
     files = video.get("video_files", [])
     if not files:
         return None
-    # Cap at 1280x720 (HD-ready) — 1080p/4K files are 3-5x larger and
-    # cause disk/memory pressure on CI runners (7 GB RAM, 14 GB disk).
     hd = [
         f for f in files
         if f.get("quality") in ("hd", "uhd")
@@ -66,8 +69,7 @@ def _get_best_video_file(video: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     ]
     if hd:
         return max(hd, key=lambda f: f.get("width", 0))
-    # Fall back: any file ≤ 1280 wide
-    sd = [f for f in files if f.get("width", 9999) <= 1280]
+    sd = [f for f in files if f.get("width", 9999) <= 1920]
     if sd:
         return max(sd, key=lambda f: f.get("width", 0))
     return max(files, key=lambda f: f.get("width", 0))
@@ -75,14 +77,10 @@ def _get_best_video_file(video: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 @retry(max_attempts=3, backoff=2.0, exceptions=(requests.RequestException, OSError))
 def _download_video(url: str, dest_path: str) -> str:
-    """
-    Stream-download a video from *url* to *dest_path*.
-    Returns the destination path on success.
-    """
+    """Stream-download a video from *url* to *dest_path*."""
     Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url, stream=True, timeout=120) as resp:
         resp.raise_for_status()
-        total = int(resp.headers.get("content-length", 0))
         downloaded = 0
         with open(dest_path, "wb") as fh:
             for chunk in resp.iter_content(chunk_size=1024 * 256):
@@ -91,6 +89,104 @@ def _download_video(url: str, dest_path: str) -> str:
                     downloaded += len(chunk)
     logger.debug("Downloaded %d bytes → %s", downloaded, dest_path)
     return dest_path
+
+
+def _recently_used_ids(used_ids: List[int]) -> Set[int]:
+    """Only skip clips used recently — allows rotation through the Pexels catalog."""
+    if len(used_ids) <= PEXELS_MAX_TRACKED_USED_IDS:
+        return set(used_ids)
+    return set(used_ids[-PEXELS_MAX_TRACKED_USED_IDS:])
+
+
+def _try_add_clip(
+    video: Dict[str, Any],
+    temp_dir: str,
+    downloaded_paths: List[str],
+    accumulated: float,
+    exclude_ids: Set[int],
+) -> Tuple[float, bool]:
+    """Download or reuse one clip. Returns (new_accumulated, added)."""
+    vid_id = video.get("id")
+    if not vid_id or vid_id in exclude_ids:
+        return accumulated, False
+
+    clip_duration = float(video.get("duration", 0))
+    if clip_duration < 3:
+        return accumulated, False
+
+    best_file = _get_best_video_file(video)
+    if not best_file:
+        return accumulated, False
+
+    dest = os.path.join(temp_dir, f"clip_{vid_id}.mp4")
+    if os.path.exists(dest):
+        downloaded_paths.append(dest)
+        return accumulated + clip_duration, True
+
+    try:
+        _download_video(best_file["link"], dest)
+        downloaded_paths.append(dest)
+        return accumulated + clip_duration, True
+    except Exception as exc:
+        logger.warning("Failed to download clip %d: %s", vid_id, exc)
+        return accumulated, False
+
+
+def _fetch_clips(
+    keywords: List[str],
+    target_seconds: float,
+    exclude_ids: Set[int],
+    temp_dir: str,
+    max_pages: int,
+    label: str = "",
+) -> Tuple[List[str], float]:
+    """Search keywords and download until *target_seconds* is reached."""
+    downloaded_paths: List[str] = []
+    accumulated = 0.0
+    skipped_used = 0
+    prefix = f"{label} " if label else ""
+
+    for keyword in keywords:
+        if accumulated >= target_seconds:
+            break
+        for page in range(1, max_pages + 1):
+            if accumulated >= target_seconds:
+                break
+            try:
+                videos = _search_pexels_videos(keyword, page=page)
+            except Exception as exc:
+                logger.error(
+                    "%sPexels search failed for '%s' page %d: %s",
+                    prefix, keyword, page, exc,
+                )
+                continue
+
+            if not videos:
+                break
+
+            for video in videos:
+                if accumulated >= target_seconds:
+                    break
+                vid_id = video.get("id")
+                if vid_id in exclude_ids:
+                    skipped_used += 1
+                    continue
+                accumulated, added = _try_add_clip(
+                    video, temp_dir, downloaded_paths, accumulated, exclude_ids,
+                )
+                if added:
+                    logger.info(
+                        "%sClip %d added (%.0fs) | total: %.0fs / %.0fs",
+                        prefix, vid_id, float(video.get("duration", 0)),
+                        accumulated, target_seconds,
+                    )
+
+    if skipped_used and not downloaded_paths:
+        logger.warning(
+            "%sSkipped %d Pexels results already in recent-use list",
+            prefix, skipped_used,
+        )
+    return downloaded_paths, accumulated
 
 
 # ─────────────────────────── Public API ───────────────────────────
@@ -103,129 +199,56 @@ def get_clips(
 ) -> List[str]:
     """
     Fetch and download video clips from Pexels to cover *total_duration* seconds.
-
-    Strategy:
-      1. For each keyword (in order), search Pexels.
-      2. Skip videos whose IDs are in *used_ids*.
-      3. Download clips until accumulated duration ≥ total_duration * buffer_factor.
-      4. Move to the next keyword if the current one is exhausted.
-
-    Args:
-        keywords:       List of search terms (e.g. ["stock market", "trading"]).
-        total_duration: Required seconds of footage (= audio length).
-        used_ids:       Pexels video IDs already used in previous videos.
-        temp_dir:       Directory to save downloaded MP4 files.
-
-    Returns:
-        List of absolute paths to downloaded MP4 files.
     """
     target_seconds = total_duration * PEXELS_CLIPS_BUFFER_FACTOR
-    accumulated = 0.0
-    downloaded_paths: List[str] = []
-    new_used_ids: List[int] = list(used_ids)
+    exclude_ids = _recently_used_ids(used_ids)
 
     logger.info(
-        "Fetching clips for keywords %s | need %.0fs (buffer %.0fs)",
+        "Fetching clips for keywords %s | need %.0fs (buffer %.0fs) | "
+        "excluding %d recent clip IDs",
         keywords,
         total_duration,
         target_seconds,
+        len(exclude_ids),
     )
 
-    for keyword in keywords:
-        if accumulated >= target_seconds:
-            break
-        for page in range(1, 4):  # up to 3 pages per keyword
-            if accumulated >= target_seconds:
-                break
-            try:
-                videos = _search_pexels_videos(keyword, page=page)
-            except Exception as exc:
-                logger.error("Pexels search failed for '%s' page %d: %s", keyword, page, exc)
-                continue
+    downloaded_paths, accumulated = _fetch_clips(
+        keywords=keywords,
+        target_seconds=target_seconds,
+        exclude_ids=exclude_ids,
+        temp_dir=temp_dir,
+        max_pages=PEXELS_MAX_PAGES_PER_KEYWORD,
+    )
 
-            for video in videos:
-                if accumulated >= target_seconds:
-                    break
-                vid_id = video.get("id")
-                if vid_id in new_used_ids:
-                    continue
-
-                clip_duration = float(video.get("duration", 0))
-                if clip_duration < 3:
-                    continue  # skip very short clips
-
-                best_file = _get_best_video_file(video)
-                if not best_file:
-                    continue
-
-                dest = os.path.join(temp_dir, f"clip_{vid_id}.mp4")
-                if os.path.exists(dest):
-                    logger.debug("Clip %d already cached, reusing.", vid_id)
-                    downloaded_paths.append(dest)
-                    new_used_ids.append(vid_id)
-                    accumulated += clip_duration
-                    continue
-
-                try:
-                    _download_video(best_file["link"], dest)
-                    downloaded_paths.append(dest)
-                    new_used_ids.append(vid_id)
-                    accumulated += clip_duration
-                    logger.info(
-                        "Clip %d downloaded (%.0fs) | total so far: %.0fs",
-                        vid_id,
-                        clip_duration,
-                        accumulated,
-                    )
-                except Exception as exc:
-                    logger.warning("Failed to download clip %d: %s", vid_id, exc)
-
-    # Last-resort: try broad finance keywords if all topic-specific ones failed
-    if not downloaded_paths:
-        fallbacks = ["money", "business office", "finance"]
+    if accumulated < target_seconds:
         logger.warning(
-            "No clips for %s — trying generic fallbacks %s", keywords, fallbacks
+            "Only %.0fs / %.0fs from topic keywords — trying fallbacks %s",
+            accumulated, target_seconds, PEXELS_FALLBACK_KEYWORDS,
         )
-        for keyword in fallbacks:
-            if accumulated >= target_seconds:
-                break
-            for page in range(1, 3):
-                if accumulated >= target_seconds:
-                    break
-                try:
-                    videos = _search_pexels_videos(keyword, page=page)
-                except Exception as exc:
-                    logger.error("Fallback search '%s' failed: %s", keyword, exc)
-                    continue
-                for video in videos:
-                    if accumulated >= target_seconds:
-                        break
-                    vid_id = video.get("id")
-                    if vid_id in new_used_ids:
-                        continue
-                    clip_duration = float(video.get("duration", 0))
-                    if clip_duration < 3:
-                        continue
-                    best_file = _get_best_video_file(video)
-                    if not best_file:
-                        continue
-                    dest = os.path.join(temp_dir, f"clip_{vid_id}.mp4")
-                    if os.path.exists(dest):
-                        downloaded_paths.append(dest)
-                        new_used_ids.append(vid_id)
-                        accumulated += clip_duration
-                        continue
-                    try:
-                        _download_video(best_file["link"], dest)
-                        downloaded_paths.append(dest)
-                        new_used_ids.append(vid_id)
-                        accumulated += clip_duration
-                        logger.info(
-                            "Fallback clip %d downloaded (%.0fs) | total: %.0fs",
-                            vid_id, clip_duration, accumulated,
-                        )
-                    except Exception as exc:
-                        logger.warning("Fallback clip %d failed: %s", vid_id, exc)
+        extra_paths, extra_secs = _fetch_clips(
+            keywords=PEXELS_FALLBACK_KEYWORDS,
+            target_seconds=target_seconds - accumulated,
+            exclude_ids=exclude_ids,
+            temp_dir=temp_dir,
+            max_pages=PEXELS_MAX_PAGES_FALLBACK,
+            label="fallback",
+        )
+        downloaded_paths.extend(extra_paths)
+        accumulated += extra_secs
+
+    if not downloaded_paths:
+        logger.warning(
+            "Pexels catalog exhausted (%d tracked IDs) — reusing clips from full library",
+            len(exclude_ids),
+        )
+        downloaded_paths, accumulated = _fetch_clips(
+            keywords=keywords + PEXELS_FALLBACK_KEYWORDS,
+            target_seconds=target_seconds,
+            exclude_ids=set(),
+            temp_dir=temp_dir,
+            max_pages=PEXELS_MAX_PAGES_FALLBACK,
+            label="reuse",
+        )
 
     if not downloaded_paths:
         raise RuntimeError(
@@ -234,8 +257,9 @@ def get_clips(
         )
 
     logger.info(
-        "Media fetch complete. %d clips downloaded (≈%.0fs total footage).",
+        "Media fetch complete. %d clips (≈%.0fs footage, target %.0fs).",
         len(downloaded_paths),
         accumulated,
+        target_seconds,
     )
     return downloaded_paths

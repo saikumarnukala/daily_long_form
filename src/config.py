@@ -165,6 +165,16 @@ CHANNEL_BRANDING = "Daksha Luma"
 # ─────────────────────────── Pipeline Settings ───────────────────────────
 MAX_HISTORY_LOOKBACK = 4
 PEXELS_CLIPS_BUFFER_FACTOR = 1.3
-PEXELS_MAX_RESULTS_PER_QUERY = 15
+PEXELS_MAX_RESULTS_PER_QUERY = 30
+PEXELS_MAX_PAGES_PER_KEYWORD = 5
+PEXELS_MAX_PAGES_FALLBACK = 6
+PEXELS_MAX_TRACKED_USED_IDS = 200  # rolling dedup window; older clips may be reused
+PEXELS_FALLBACK_KEYWORDS = [
+    "money",
+    "business office",
+    "finance",
+    "stock market chart",
+    "economy",
+]
 RETRY_MAX_ATTEMPTS = 3
 RETRY_BACKOFF = 2.0
