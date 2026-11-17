@@ -1,0 +1,1210 @@
+{
+  "The 50-30-20 Budgeting Rule for Indians": {
+    "title": "The 50-30-20 Budget on Rs 50,000: What If Rent Is Too High?",
+    "thumbnail_text": "RENT TOO HIGH?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "Split the salary",
+        "narration": "Imagine a take-home salary of 50,000 rupees. A 50-30-20 split assigns 25,000 to needs, 15,000 to wants and 10,000 to savings or other financial goals. These are illustrative amounts. Start with the money that actually reaches your account, after payroll deductions. On screen, the three amounts add back to 50,000. That reconciliation matters because a budget cannot allocate more than you receive.",
+        "lines": [
+          "Take-home  Rs 50,000",
+          "Needs  Rs 25,000",
+          "Wants  Rs 15,000",
+          "Goals  Rs 10,000"
+        ]
+      },
+      {
+        "heading": "Test the needs budget",
+        "narration": "Now enter actual needs. Rent is 18,000, groceries are 6,000, utilities are 2,000 and commuting costs 3,000. Needs total 29,000. That is 4,000 above the suggested allowance. Calling groceries a want would hide the shortfall. Keep the categories honest. If there are minimum loan payments, insurance costs or dependants, add those obligations before deciding the split is achievable.",
+        "lines": [
+          "Rent 18,000 + groceries 6,000",
+          "Utilities 2,000 + travel 3,000",
+          "Needs total  Rs 29,000",
+          "Above allowance  Rs 4,000"
+        ]
+      },
+      {
+        "heading": "Rebalance honestly",
+        "narration": "In this example, reducing wants from 15,000 to 11,000 balances the plan while leaving the goals allocation at 10,000. Your household may need a different adjustment. The percentages are a planning framework, not a test you fail. If essentials consume most of your income, use the real figures and identify which costs can actually change. Avoid a plan that requires borrowing just to maintain a savings percentage.",
+        "lines": [
+          "Needs  Rs 29,000",
+          "Wants  Rs 11,000",
+          "Goals  Rs 10,000",
+          "Total  Rs 50,000"
+        ]
+      },
+      {
+        "heading": "Compare with actual spending",
+        "narration": "After one week, replace estimates with actual spending. If a bill was omitted, add it and rebalance the remaining money. Keep both the original plan and the revised one so you can see what changed. The useful result is a complete budget you can follow. Write your take-home pay at the top, enter essential commitments first, then divide what remains between your own goals and discretionary spending.",
+        "lines": [
+          "Plan -> actual -> revision",
+          "Include every commitment",
+          "Use your own household costs"
+        ]
+      }
+    ]
+  },
+  "Zero-Based Budgeting Explained Simply": {
+    "title": "Give Every Rupee a Job: A Rs 50,000 Zero-Based Budget",
+    "thumbnail_text": "WHERE DOES IT GO?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "Allocate the full income",
+        "narration": "Here is a fictional 50,000 rupee monthly salary. We will allocate the entire amount before spending it. Zero-based budgeting means income minus planned allocations equals zero. The allocations can include savings, future bills and a buffer. It does not mean emptying your bank account. Start with take-home income you can reasonably expect, rather than an uncertain bonus.",
+        "lines": [
+          "Income  Rs 50,000",
+          "Income - allocations = 0",
+          "Savings are an allocation"
+        ]
+      },
+      {
+        "heading": "Build the actual plan",
+        "narration": "Allocate 15,000 to rent, 6,000 to groceries, 5,000 to utilities and transport, and 5,000 to a loan payment. That uses 31,000. Assign another 8,000 to savings, 3,000 to future annual bills, 6,000 to personal spending and 2,000 to a buffer. Those remaining allocations total 19,000. Together, the two groups use exactly 50,000. Every number here is illustrative; use your actual obligations.",
+        "lines": [
+          "Rent + groceries  Rs 21,000",
+          "Utilities/travel + loan  Rs 10,000",
+          "Savings + annual bills  Rs 11,000",
+          "Personal + buffer  Rs 8,000"
+        ]
+      },
+      {
+        "heading": "Handle a change",
+        "narration": "Suppose rent increases by 2,000 next month. Leaving every other line unchanged would allocate 52,000 against income of 50,000. In this example, reducing personal spending to 4,000 restores balance. Make the change explicitly. If no flexible category can cover it, the original plan is unaffordable and needs a larger revision. A spreadsheet cannot make the shortfall disappear.",
+        "lines": [
+          "New rent  Rs 17,000",
+          "Unchanged plan  Rs 52,000",
+          "Personal spending  Rs 4,000",
+          "Revised total  Rs 50,000"
+        ]
+      },
+      {
+        "heading": "Use it through the month",
+        "narration": "Review the plan when income arrives and when a material expense changes. Track actual spending against each allocation. Transfers between your own accounts should not be counted twice as new spending. Keep money allocated to annual bills visible even while it remains in your account. Finish by checking that all allocations add to your available income and that any money reserved for later has a named purpose.",
+        "lines": [
+          "Track allocations and actuals",
+          "Avoid double-counting transfers",
+          "Name the purpose of reserved money"
+        ]
+      }
+    ]
+  },
+  "How to Track Every Rupee You Spend": {
+    "title": "Build a Simple Expense Tracker: Find Where Your Salary Goes",
+    "thumbnail_text": "FIND THE LEAK",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "Create four columns",
+        "narration": "Open a blank spreadsheet and create four columns: date, description, category and amount. We will build a small expense tracker using fictional purchases. Enter 120 rupees for lunch under food, 80 for a bus ride under transport and 350 for groceries. The total should be 550 rupees. This gives you a quick way to check that the sheet is adding the entries correctly.",
+        "lines": [
+          "Date | Description | Category | Amount",
+          "Lunch / Food  Rs 120",
+          "Bus / Transport  Rs 80",
+          "Groceries  Rs 350"
+        ]
+      },
+      {
+        "heading": "Add categories and totals",
+        "narration": "Put amounts in column D. In a separate summary cell, SUM of D2 through D4 returns 550. To total food entries, use SUMIF with the category column as the criteria range and the amount column as the sum range. Keep category names consistent. Food and foods would otherwise appear as separate labels. As the sheet grows, use a table or expand the formula range to include new rows.",
+        "lines": [
+          "SUM(D2:D4) = 550",
+          "One category name per type",
+          "Expand ranges for new entries",
+          "Food total  Rs 120"
+        ]
+      },
+      {
+        "heading": "Prevent double counting",
+        "narration": "Suppose you paid for lunch using a credit card. Record the purchase as spending. When you later pay the card bill from your bank account, label that settlement as a transfer and exclude it from spending totals. Otherwise the same lunch appears twice. Similarly, withdrawing cash moves money; record the later cash purchases. Record fees and interest separately when they occur.",
+        "lines": [
+          "Purchase -> expense",
+          "Card settlement -> transfer",
+          "Cash withdrawal -> transfer",
+          "Fees -> separate expense"
+        ]
+      },
+      {
+        "heading": "Reconcile the week",
+        "narration": "At the end of the week, compare your entries with bank and card statements, then add any cash purchases you missed. Use category totals to identify one decision you can act on. The goal is a reliable record, so choose categories simple enough to maintain. Before sharing a tracker publicly, replace account details and merchant information with fictional examples, as we have done here.",
+        "lines": [
+          "Reconcile with statements",
+          "Include cash purchases",
+          "Review one category each week"
+        ]
+      }
+    ]
+  },
+  "Building a 1-Year Financial Plan": {
+    "title": "Annual Bills Keep Surprising You? Build a 12-Month Plan",
+    "thumbnail_text": "BILLS WITHOUT SURPRISES",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "Put bills on a calendar",
+        "narration": "Imagine a household expecting a 12,000 rupee bill in twelve months and a 6,000 rupee bill in three months. Dividing every annual expense by twelve would miss the nearer deadline. Write the amount, due month and money already reserved for each bill. We will calculate a separate monthly provision for each one.",
+        "lines": [
+          "Bill A  Rs 12,000 / 12 months",
+          "Bill B  Rs 6,000 / 3 months",
+          "Record amount and due date"
+        ]
+      },
+      {
+        "heading": "Work backwards from the deadline",
+        "narration": "For bill A, starting from zero means setting aside 1,000 rupees a month over twelve contributions. For bill B, zero reserved means 2,000 a month over three contributions. The combined provision is 3,000 a month initially. If 3,000 is already reserved for bill B, the remaining gap is 3,000, requiring 1,000 per month over three contributions. Count actual paydays before the due date.",
+        "lines": [
+          "A  12,000 / 12 = 1,000",
+          "B  6,000 / 3 = 2,000",
+          "Initial monthly total  Rs 3,000",
+          "Subtract existing reserves first"
+        ]
+      },
+      {
+        "heading": "Test affordability",
+        "narration": "Compare the required provision with money available after monthly commitments. If the provision does not fit, revise discretionary plans, investigate changing a bill date or reconsider a planned purchase. Do not label a predictable annual bill an emergency simply because it was omitted from the monthly budget. Keep expected costs and unexpected events visible separately.",
+        "lines": [
+          "Required provision",
+          "Available monthly surplus",
+          "Gap needs an explicit decision"
+        ]
+      },
+      {
+        "heading": "Refresh the plan",
+        "narration": "When a bill is paid, record the actual amount and begin planning for its next due date. Review the calendar when prices change or a new commitment appears. A twelve-month plan should move forward with you. The next step is to list your three largest predictable bills and count how many salary payments remain before each is due.",
+        "lines": [
+          "Record actual bill amounts",
+          "Roll the calendar forward",
+          "Start with three large bills"
+        ]
+      }
+    ]
+  },
+  "How to Start Investing in Nifty 50": {
+    "title": "Nifty 50 Index Fund or ETF? Compare the Buying Process",
+    "thumbnail_text": "INDEX FUND OR ETF?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://investor.sebi.gov.in/exchange_traded_fund.html"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A Nifty 50 index fund and an ETF can follow the same index while giving you different buying experiences. The index name alone does not tell you the full cost or how your order will execute. Here is a fictional purchase to make the distinction concrete.",
+        "lines": [
+          "INDEX FUND OR ETF?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Suppose you have 5,000 rupees to invest. An index mutual fund accepts an amount and allots units under its applicable net asset value rules. An ETF trades on an exchange. If the ETF price is 240 rupees, twenty units cost 4,800 before charges and leave 200 uninvested. That is an illustration, not a live price. The trading price can also differ from the fund's underlying net asset value.",
+        "lines": [
+          "Budget  Rs 5,000",
+          "Illustrative ETF price  Rs 240",
+          "20 units  Rs 4,800",
+          "Remaining before charges  Rs 200"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Compare expense ratios, tracking difference, transaction costs and the ETF bid-ask spread. Check account requirements and how easily you can place or redeem an order. Both can fall when the underlying market falls. A convenient monthly purchase method does not remove investment risk.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Open the official documents of two products tracking the same index. Write down their costs and dealing process side by side. Choose only after considering your goal, time horizon and ability to withstand losses. The source linked below explains how ETFs trade.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Understanding Smallcap Stocks": {
+    "title": "Smallcap Stocks: What a 40% Fall Does to Your Money",
+    "thumbnail_text": "A FALL IS NOT SYMMETRIC",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A share that falls forty percent needs a larger percentage gain to recover. This arithmetic matters when assessing volatile investments, including small-company shares. We will use fictional prices rather than recommend a company.",
+        "lines": [
+          "A FALL IS NOT SYMMETRIC"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Start with a share worth 100 rupees. A forty percent decline takes it to 60. Recovering the missing 40 requires a gain of 40 divided by 60, or about 66.7 percent. A forty percent rise from 60 reaches only 84. The percentage base changed after the fall.",
+        "lines": [
+          "100 -> 60  = -40%",
+          "60 -> 100  = +66.7%",
+          "60 + 40%  = 84"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "For a small company, investigate cash generation, debt, governance and the ability to sell without a large price concession. A small share price does not establish that a business is cheap; valuation also depends on the number of shares and the business underneath. Diversification can reduce concentration, while market losses remain possible.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Before considering a purchase, write down a downside scenario and when you may need the money. If a sharp decline would force you to sell to pay an essential bill, revisit the allocation. Use company filings for business facts rather than a price chart alone.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Sectoral Funds vs Diversified Funds": {
+    "title": "Sector Fund or Diversified Fund? Count the Overlap First",
+    "thumbnail_text": "HOW MUCH OVERLAP?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Buying more funds does not automatically spread your risks. Two funds can own many of the same companies or concentrate on the same industry. We will compare a fictional sector allocation with a broader portfolio.",
+        "lines": [
+          "HOW MUCH OVERLAP?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine a 100,000 rupee portfolio split equally between a technology sector fund and a diversified equity fund. If the diversified fund also holds twenty percent in technology, that contributes another 10,000 rupees of technology exposure. The portfolio then has 60,000, or sixty percent, in that sector. These weights are invented to illustrate the calculation.",
+        "lines": [
+          "Sector fund  Rs 50,000",
+          "Other fund technology  Rs 10,000",
+          "Combined exposure  Rs 60,000",
+          "Total portfolio  Rs 100,000"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "A sector fund concentrates on a particular part of the economy. A diversified fund may spread holdings more widely, but you must inspect its current portfolio to understand the actual exposure. Fund names and the number of schemes are insufficient. Holdings and weights change over time.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Download the latest factsheets. Multiply each fund's portfolio weight by its sector weight, then add across funds. Repeat for your largest companies if you want to check company overlap. Decide whether the combined exposure matches the risks you intended to take.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Pick Bluechip Stocks": {
+    "title": "A Famous Company Can Still Be an Expensive Stock",
+    "thumbnail_text": "GOOD COMPANY, HIGH PRICE?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A familiar brand can be a useful starting point for research, but its share price still needs scrutiny. Compare the price you pay with the earnings and risks you are buying. This fictional example shows why reputation alone cannot settle the decision.",
+        "lines": [
+          "GOOD COMPANY, HIGH PRICE?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Company A earns 10 rupees per share and trades at 200. Its price-to-earnings ratio is twenty. Company B also earns 10 per share but trades at 400, giving a ratio of forty. The higher ratio might reflect stronger expected growth, or expectations that later disappoint. Neither number alone identifies a bargain.",
+        "lines": [
+          "A  200 / 10 = 20 P/E",
+          "B  400 / 10 = 40 P/E",
+          "Compare growth assumptions",
+          "Check cash flow and debt"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Read several years of revenue, profit and operating cash flow. Check debt obligations, share dilution, governance disclosures and whether recent earnings contain one-off items. Compare businesses with similar economics. A high profit figure accompanied by weak cash collection deserves investigation.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Build a one-page comparison using official annual reports. Record the valuation, the assumptions required to justify it and what evidence would change your view. Avoid treating the bluechip label as a promise of safety or a substitute for an appropriate portfolio allocation.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How SIP Works: A Beginner's Guide": {
+    "title": "How a SIP Buys Units: A Three-Month Example",
+    "thumbnail_text": "SAME PAYMENT, DIFFERENT UNITS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A systematic investment plan describes a way of making regular investments. The units you receive depend on the applicable price each time. Here is a simplified three-month example with no fees or taxes included.",
+        "lines": [
+          "SAME PAYMENT, DIFFERENT UNITS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Invest 1,000 rupees at a unit price of 100 and you receive ten units. Next month, a price of 80 buys 12.5 units. In month three, a price of 125 buys eight. Total contributions are 3,000 and total units are 30.5. Divide 3,000 by 30.5 to get an average purchase cost of approximately 98.36 rupees per unit.",
+        "lines": [
+          "1,000 / 100 = 10 units",
+          "1,000 / 80 = 12.5 units",
+          "1,000 / 125 = 8 units",
+          "Total 30.5 units / Rs 3,000"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "If the later unit price is 90, those 30.5 units are worth 2,745 rupees. That is below the amount contributed. Regular investing changes the purchase schedule; it does not assure a profit. The fund's underlying assets, costs and risks still matter.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Use your own contribution schedule to calculate units and total cost. Check that the investment suits your goal and that the payment is affordable alongside essential commitments. Review the fund documents and keep an adequate cash plan for near-term bills.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Best Mutual Fund Categories for {year}": {
+    "title": "Choose a Mutual Fund Category by Goal, Time and Risk",
+    "thumbnail_text": "START WITH THE GOAL",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "There is no single best fund category for every household. Start with the purpose and timing of the money. Comparing recent returns before defining the goal can lead you towards risks you did not intend to take.",
+        "lines": [
+          "START WITH THE GOAL"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Consider two fictional goals. One person needs 60,000 rupees for a bill in six months. Another is investing towards a flexible goal fifteen years away. Even with the same starting balance, the consequences of a market decline are different. The first person has little time to wait and a fixed payment date.",
+        "lines": [
+          "Goal A  Rs 60,000 / 6 months",
+          "Goal B  Flexible / 15 years",
+          "Different deadlines",
+          "Different ability to absorb losses"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Compare each category's underlying assets, risk disclosures, costs and liquidity. Equity, debt and hybrid labels describe different exposures, not guaranteed outcomes. Debt investments can have credit and interest-rate risks. A hybrid fund still needs inspection because its allocation and investment rules matter.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Write the goal, deadline and acceptable shortfall on paper. Then read the scheme risk disclosures before comparing products within a suitable category. If you cannot explain how an investment could lose value, keep researching before committing essential money.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Direct vs Regular Mutual Funds Explained": {
+    "title": "Direct vs Regular Mutual Funds: Compare Cost and Service",
+    "thumbnail_text": "WHAT ARE YOU PAYING FOR?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "When comparing direct and regular plans of the same mutual fund scheme, match the scheme and option before comparing expenses. Look at what service you receive and the costs disclosed in the current documents.",
+        "lines": [
+          "WHAT ARE YOU PAYING FOR?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine two hypothetical annual expense rates of 0.5 percent and 1.5 percent. Applied to a constant 100,000 rupee balance, those correspond to 500 and 1,500 rupees over a year. The difference is 1,000. Actual fund expenses accrue within the fund and the investment value changes, so this is a simplified cost illustration rather than a bill or return forecast.",
+        "lines": [
+          "Illustrative balance  Rs 100,000",
+          "0.5% example  Rs 500",
+          "1.5% example  Rs 1,500",
+          "Simplified difference  Rs 1,000"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Direct and regular plans can have different expense ratios and net asset values. Distribution costs contribute to the distinction. Assess whether you can select and maintain the investment yourself or need suitable professional assistance. An expense comparison alone does not establish that the scheme fits your circumstances.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Open the current factsheet and compare the exact plans of the same scheme. Record the expense ratios, the service offered and how the intermediary is compensated. Keep the investment decision separate from a sales pitch based only on recent returns.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Exit Mutual Funds Smartly": {
+    "title": "Before You Redeem a Mutual Fund: Check These Four Details",
+    "thumbnail_text": "BEFORE YOU REDEEM",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A redemption decision should account for the money you need, when you need it, the applicable charges and the tax consequences. We will work through four details rather than predict the best day to sell.",
+        "lines": [
+          "BEFORE YOU REDEEM"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "First, write the cash amount and payment date. Second, check the scheme's exit-load terms for the units you plan to redeem. Third, identify the relevant acquisition dates and applicable tax treatment. Fourth, check redemption processing and when proceeds are expected to reach your bank. A displayed portfolio value is not a promise that the full amount will arrive immediately.",
+        "lines": [
+          "1  Amount and deadline",
+          "2  Exit-load terms",
+          "3  Acquisition dates and tax",
+          "4  Processing and bank credit"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Suppose a fictional bill of 20,000 rupees is due next week. Verify processing times before assuming a last-minute redemption will cover it. Prices can move before the applicable net asset value is determined, and charges or taxes can affect the outcome. Rules differ across products and circumstances.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Read current scheme documents and use the tax rules applicable to your transaction. Save the confirmation and reconcile the bank credit with the redemption statement. If you are replacing one fund with another, include the costs of both transactions when assessing the switch.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Build an Emergency Fund": {
+    "title": "Calculate an Emergency Fund From Your Essential Expenses",
+    "thumbnail_text": "WHAT MUST KEEP RUNNING?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Start an emergency-fund calculation with essential monthly spending. Salary alone does not tell you how much you need to keep the household running during an interruption. This fictional household shows the arithmetic.",
+        "lines": [
+          "WHAT MUST KEEP RUNNING?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Rent is 12,000 rupees, groceries 6,000, utilities and transport 4,000, and required repayments 3,000. Essential spending totals 25,000. Three months would be 75,000 and six months 150,000. These are planning scenarios, not universal targets. If the household already has 20,000 reserved, the gap to the three-month scenario is 55,000.",
+        "lines": [
+          "Essentials  Rs 25,000/month",
+          "3-month scenario  Rs 75,000",
+          "Already reserved  Rs 20,000",
+          "Gap 55,000 / 5,000 = 11 months"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "The appropriate buffer depends on income stability, dependants, insurance, access to funds and other commitments. Separate predictable annual bills from genuinely unexpected costs. Consider how quickly money can be accessed and the possibility of loss when choosing where to hold it.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "List your essentials and choose a realistic first milestone. With an illustrative 5,000 rupees available each month, closing a 55,000 gap takes eleven contributions before any interest or withdrawals. Recalculate when expenses change and rebuild after using the reserve.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Smart Ways to Save Money Every Month": {
+    "title": "Find One Repeat Expense You Can Actually Reduce",
+    "thumbnail_text": "ONE CHANGE YOU CAN KEEP",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Choose a repeat expense you can change without disrupting essentials. A small saving matters only if the new plan is realistic enough to maintain. Here is a fictional food-spending example with the replacement cost included.",
+        "lines": [
+          "ONE CHANGE YOU CAN KEEP"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Suppose someone buys eight delivered lunches a month at 250 rupees each. That costs 2,000. Replacing four with home-prepared meals costing an additional 80 each leaves four deliveries at 1,000 plus 320 in ingredients. The revised total is 1,320 and the difference is 680. Ignoring the ingredients would overstate the saving.",
+        "lines": [
+          "Old  8 x 250 = Rs 2,000",
+          "New deliveries  Rs 1,000",
+          "Replacement meals  Rs 320",
+          "Difference  Rs 680"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Include transport, equipment and time constraints when comparing alternatives. Avoid cancelling a service you need solely to create an impressive budget number. Track actual purchases for a month because a planned saving may disappear through other spending.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Choose one change, record the old and replacement costs, and set a review date. If the new habit holds, assign the realised saving a purpose in your budget. If it does not, adjust the plan to fit your routine rather than relying on an unrealistic target.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Financial Mistakes to Avoid in Your 30s": {
+    "title": "Three Budget Mistakes That Make Your Surplus Look Bigger",
+    "thumbnail_text": "IS THE SURPLUS REAL?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A budget can show spare money while quietly missing real obligations. We will check three common bookkeeping mistakes using a fictional monthly plan: omitted annual bills, double-counted transfers and counting uncertain income as guaranteed.",
+        "lines": [
+          "IS THE SURPLUS REAL?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "A 12,000 rupee annual bill needs an average provision of 1,000 per month over twelve contributions. Leaving it out inflates the apparent monthly surplus. Paying a credit-card statement after recording its individual purchases should be marked as a transfer; counting both overstates spending. Finally, a hoped-for bonus cannot cover a bill due before the bonus is confirmed.",
+        "lines": [
+          "Annual bill 12,000 / 12 = 1,000",
+          "Card settlement is a transfer",
+          "Unconfirmed bonus is uncertain",
+          "Recalculate the actual surplus"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "These mistakes push the budget in different directions. The first and third can make money look available when it is not. The second can make expenses look larger than they are. Correct the records before making a major decision based on the surplus.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Review last month's plan. Add predictable annual obligations, reconcile transfers and separate confirmed income from uncertain receipts. Then recalculate the remaining amount. A smaller but accurate surplus is more useful for making commitments than a larger number built from missing entries.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Achieve Financial Independence": {
+    "title": "Financial Independence: Start With Spending and Scenarios",
+    "thumbnail_text": "START WITH YOUR COSTS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Before choosing a financial-independence target, calculate what the lifestyle would cost. A single portfolio number hides assumptions about inflation, returns, taxes and how long the money must last.",
+        "lines": [
+          "START WITH YOUR COSTS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine present spending of 30,000 rupees a month, or 360,000 a year. Adding a recurring 5,000 monthly cost raises annual spending by 60,000, bringing the total to 420,000. This arithmetic does not determine a retirement portfolio. It shows how the spending base changes before any investment assumption is applied.",
+        "lines": [
+          "Monthly spending  Rs 30,000",
+          "Annual spending  Rs 360,000",
+          "Extra 5,000/month = 60,000/year",
+          "Revised annual cost  Rs 420,000"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Build several scenarios for future expenses, income and market outcomes. Include irregular costs and dependants. A fixed withdrawal percentage should not be treated as a promise that money will last under every market sequence or in every country. Longer horizons create more uncertainty.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Start by reconciling twelve months of actual spending. Separate essential costs from flexible ones and list income sources with their limitations. Revisit assumptions periodically and seek qualified advice when making an irreversible retirement decision. The first deliverable is a defensible spending estimate.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "New Tax Regime vs Old Tax Regime": {
+    "title": "Old or New Tax Regime? Compare Using Your Own Inputs",
+    "thumbnail_text": "COMPARE BOTH RESULTS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/income-tax-calculator-um"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "The tax regime comparison starts with your tax year and circumstances. A reused table from a different year can produce a misleading answer. Use the Income Tax Department's current calculator and select the applicable Act and year before entering income.",
+        "lines": [
+          "COMPARE BOTH RESULTS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Prepare a worksheet containing income sources, eligible allowances or exemptions, and deductions supported by documents. Enter consistent income information for both regimes. Then open the comparison and examine the estimated liability under each. This walkthrough deliberately leaves rates to the official calculator, so a rate table copied into a video cannot silently become outdated.",
+        "lines": [
+          "Select applicable Act and year",
+          "Use consistent income inputs",
+          "Include supported eligible claims",
+          "Compare estimated liabilities"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Eligibility, income type and the rules for choosing or changing a regime can affect the decision. The calculator is an estimate based on your inputs. A lower displayed result is useful only if the entries and claims are correct. Do not assume a colleague's deduction or tax outcome also applies to you.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Save the comparison with its year and assumptions. Verify unclear entries against the current official guidance or with a qualified professional before filing. The description links the official calculator manual, which explains the applicable-year selection and comparison function.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Section 80C Tax Saving Investments Explained": {
+    "title": "Before Claiming a Tax Deduction: Check Year, Eligibility and Evidence",
+    "thumbnail_text": "CHECK BEFORE CLAIMING",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/income-tax-calculator-um"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Before putting money into a product to obtain a deduction, verify which law, year and regime apply. Section names and eligibility should be read in that context. This video uses a document-checking process rather than assuming one deduction limit applies to every viewer.",
+        "lines": [
+          "CHECK BEFORE CLAIMING"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Create four columns: item, amount paid, supporting document and eligible amount under the applicable rules. A payment of 10,000 rupees does not automatically establish a 10,000 deduction. Some payments may be ineligible, restricted or already included elsewhere. Keep the raw payment separate from the amount you can claim.",
+        "lines": [
+          "Item | Paid | Evidence | Eligible",
+          "Payment is not automatic eligibility",
+          "Check Act, year and regime",
+          "Review product costs and access"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Check the current Income Tax Department guidance for the selected tax year. Evaluate the product's lock-in, liquidity, charges and investment risk separately from any tax benefit. Avoid purchasing an unsuitable product just because someone advertises a deduction.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Reconcile employer records with your own evidence and avoid claiming the same payment twice. Enter only supported eligible amounts into the official calculator. If the rules or applicable section are unclear, resolve that question before committing funds or filing a return.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to File ITR for Salaried Employees": {
+    "title": "Before Filing Your Income Tax Return: Reconcile These Records",
+    "thumbnail_text": "RECONCILE BEFORE FILING",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/income-tax-calculator-um"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "For a salaried taxpayer, preparing a return begins with reconciling records. A prefilled number still needs checking against your actual income and the rules for the relevant filing year.",
+        "lines": [
+          "RECONCILE BEFORE FILING"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Gather salary certificates, bank interest records, tax-credit information and documents for any other income or claims. Suppose your bank records show interest that is missing from your own income worksheet. Investigate and correct the worksheet before choosing a final calculation. Use the official portal's current instructions to identify the return form that matches your circumstances.",
+        "lines": [
+          "Salary and bank records",
+          "Tax credits and other income",
+          "Correct year and applicable form",
+          "Check filing and verification status"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Multiple employers, investment transactions or other income can change what information and form are needed. Check the applicable year, residential status and available regime choices. A short tutorial cannot substitute for resolving discrepancies in your own records.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Follow the portal's current filing and verification instructions. Retain your submitted return, acknowledgement and supporting records. Check completion status rather than assuming uploading a form finished every required step. Resolve unfamiliar income or eligibility questions with appropriate professional help.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "HRA and Home Loan Tax Benefits": {
+    "title": "Rent and Home Loan Tax Claims: Build an Evidence Checklist",
+    "thumbnail_text": "EVIDENCE BEFORE ESTIMATES",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/income-tax-calculator-um"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Rent payments and home-loan payments have different components and eligibility conditions. Start with documents and the applicable tax year before calculating a claimed benefit.",
+        "lines": [
+          "EVIDENCE BEFORE ESTIMATES"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "For rent, record the period, actual payments and supporting documents. For a home loan, obtain the lender's statement separating principal and interest. If a fictional monthly payment is 20,000 rupees, treating the entire amount as interest would misstate the record. Use the lender's breakdown rather than guessing from the EMI.",
+        "lines": [
+          "Rent -> payment evidence",
+          "Loan -> principal / interest split",
+          "Confirm year and regime",
+          "Link each claim to its rule"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "The applicable regime, property use, ownership and other facts can affect eligibility. A payment existing does not establish that the full amount is deductible. Check current official guidance for the particular claim and year; avoid reusing figures from an older video.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Create a worksheet linking each proposed claim to its document and applicable rule. Use the official calculator for an estimate after checking eligibility. If you are claiming both rent-related and property-related benefits, confirm how your actual facts fit the rules before filing.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Bitcoin Basics: What Every Indian Should Know": {
+    "title": "Bitcoin: Separate Price Risk, Custody and Access",
+    "thumbnail_text": "THREE DIFFERENT RISKS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Understanding a crypto asset requires more than watching its price. Price risk, custody risk and access risk are separate questions. This example explains the distinction without recommending a purchase.",
+        "lines": [
+          "THREE DIFFERENT RISKS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine a fictional holding bought for 10,000 rupees. A thirty percent price decline leaves a quoted value of 7,000 before costs. Even if the price stays unchanged, losing access credentials or facing a platform withdrawal restriction can create a different problem. A visible account balance is not the same as having reliable access to funds.",
+        "lines": [
+          "10,000 minus 30% = Rs 7,000",
+          "Price risk",
+          "Custody risk",
+          "Access risk"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Understand who controls the private keys, what recovery process exists and the conditions for withdrawing. Self-custody and platform custody have different responsibilities and risks. Be cautious about requests for seed phrases and promises of fixed or guaranteed returns. Check current Indian legal and tax requirements separately.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Before risking money, describe how you would recover access and what would happen if the provider became unavailable. Keep essential household obligations outside a speculative plan. A clear explanation of those failure cases is a better starting point than a price target.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How Blockchain Technology Works": {
+    "title": "How a Blockchain Links Records: A Simple Illustration",
+    "thumbnail_text": "WHY LINK THE BLOCKS?",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Imagine a shared notebook where each new page includes a fingerprint of the previous page. That is a simplified way to understand how blocks can be linked. The full system also needs rules for deciding which updates participants accept.",
+        "lines": [
+          "WHY LINK THE BLOCKS?"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Our fictional notebook starts with page A. Page B includes a hash derived from A, and page C includes one derived from B. Changing A changes its hash, so the reference stored in B no longer matches. The link helps reveal a change. It does not, by itself, decide which version of the notebook the network should accept.",
+        "lines": [
+          "A -> hash(A) in B",
+          "B -> hash(B) in C",
+          "Changed A breaks the reference",
+          "Consensus decides accepted updates"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Consensus rules address agreement among participants. Different blockchains use different mechanisms and make different trade-offs around throughput, costs and participation. A blockchain record also cannot prove that an external real-world statement was true merely because someone wrote it into the system.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "When evaluating a blockchain claim, ask three questions. What is recorded? Who can add or validate records? How does the system handle conflicting updates? Keep those questions separate from whether a related token has investment value.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Crypto Tax Rules in India {year}": {
+    "title": "Crypto Transactions in India: Organise Records Before Tax Filing",
+    "thumbnail_text": "START WITH THE RECORDS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [
+      "https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/income-tax-calculator-um"
+    ],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Crypto tax calculations depend on the applicable law, year and transaction facts. Start by making the records complete. This video explains a recordkeeping workflow without publishing a rate table that may become outdated.",
+        "lines": [
+          "START WITH THE RECORDS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "For each transaction, retain the date, asset, quantity, transaction type, value in rupees, fees and platform statement. Distinguish purchases, sales, swaps and transfers between your own accounts. If an asset moved from your exchange account to your wallet, preserve both sides of the transfer so it can be reconciled rather than counted twice by mistake.",
+        "lines": [
+          "Date | Asset | Quantity | Type",
+          "INR value and fees",
+          "Link transfers across accounts",
+          "Resolve missing valuation records"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Check the tax treatment of each transaction type under current Indian rules, including any relevant withholding and loss provisions. Do not assume the treatment matches ordinary shares or a rule described for another country. Missing cost or valuation records should be resolved before trusting a software total.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Reconcile your transaction ledger with platform and wallet records. Ask a qualified tax professional about unclear classifications. Retain the assumptions and supporting documents used for the filing year. Use official tax guidance alongside this recordkeeping process.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Top Altcoins to Research in {year}": {
+    "title": "Before Researching an Altcoin: Supply, Liquidity and Control",
+    "thumbnail_text": "READ BEFORE YOU BUY",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A useful altcoin research process starts with questions about supply, liquidity and who can change the system. This is a checklist for evaluating claims, rather than a list of coins to buy.",
+        "lines": [
+          "READ BEFORE YOU BUY"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Suppose a fictional token trades at 2 rupees and has ten million units circulating. Multiplying price by circulating supply gives a twenty-million-rupee market capitalisation. If more units can enter circulation, examine their release schedule. The low price of one token alone does not establish that it is cheap.",
+        "lines": [
+          "Price  Rs 2",
+          "Circulating units  10 million",
+          "Market cap  Rs 20 million",
+          "Check future supply and liquidity"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Read the project documents, token allocation, unlock schedule and available technical assessments. Inspect who controls administrative keys and how concentrated holdings are. Consider trading depth and whether a small trade can materially move the price. Market capitalisation does not mean everyone could sell at the quoted price.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Write down the strongest evidence against the investment thesis as well as the claims supporting it. Verify important details through independent records where possible. If ownership, supply or withdrawal conditions are unclear, record that uncertainty before deciding whether further research is justified.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Rent vs Buy: What Makes Sense in India": {
+    "title": "Rent vs Buy: Compare the Upfront Cash and Monthly Costs",
+    "thumbnail_text": "COMPARE ALL THE COSTS",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A rent-versus-buy comparison needs more than rent and an EMI. Start with upfront cash, monthly ownership costs and how long you expect to stay. We will build a fictional comparison without forecasting property prices.",
+        "lines": [
+          "COMPARE ALL THE COSTS"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Suppose rent is 18,000 rupees a month. A purchase would require a 35,000 EMI and 4,000 in monthly maintenance and other budgeted ownership costs. The monthly cash-flow difference is 21,000. Separately list the down payment, transaction charges and initial repairs. These are illustrative amounts; actual costs vary by property and location.",
+        "lines": [
+          "Rent  Rs 18,000/month",
+          "EMI 35,000 + other costs 4,000",
+          "Cash-flow difference  Rs 21,000",
+          "Upfront cash is a separate input"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "An EMI contains principal and interest, so the full payment is not an expense in the same sense as rent. For a complete comparison, model equity built, interest, sale costs, rent changes and alternative uses of upfront cash. Include the practical value of flexibility or long-term stability.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Run more than one scenario for length of stay and future costs. Check affordability under a higher payment or temporary income interruption. Obtain actual property and loan documents before making a commitment. A spreadsheet is most useful when it exposes the assumptions driving the decision.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Invest in REITs in India": {
+    "title": "REITs: Read the Properties, Debt and Distributions",
+    "thumbnail_text": "LOOK INSIDE THE TRUST",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A real estate investment trust gives exposure to a property portfolio through a financial security. To understand it, look at the assets, financing and distributions rather than comparing a headline yield alone.",
+        "lines": [
+          "LOOK INSIDE THE TRUST"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine two fictional property portfolios with equal rental income. One relies heavily on a single tenant and has a large debt maturity approaching. The other has tenants spread across several buildings and a different financing schedule. Similar recent distributions can therefore come with different risks. The actual terms require reading the trust's disclosures.",
+        "lines": [
+          "Properties and occupancy",
+          "Tenants and lease expiries",
+          "Debt and financing dates",
+          "Distribution history and risks"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Inspect occupancy, tenant concentration, lease expiries, borrowing costs and related-party transactions. Distribution amounts and market prices can change. A quoted yield calculated from an earlier distribution is not a fixed future payment. Check the product's current structure and the tax treatment applicable to you.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Use the latest investor presentation and financial statements to build a comparison. Write down where rental cash comes from, what could interrupt it and how debt is funded. Compare investment costs and liquidity before deciding whether it fits your wider plan.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "Affordable Housing Investment Strategies": {
+    "title": "An Affordable Property Can Still Have Expensive Holding Costs",
+    "thumbnail_text": "PRICE IS ONLY THE START",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "A lower purchase price does not automatically make a property an affordable investment. Add the costs of owning it when it is vacant and the money required before any rent arrives.",
+        "lines": [
+          "PRICE IS ONLY THE START"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "For a fictional property, suppose annual rent collected is 120,000 rupees. Maintenance, repairs and other operating costs total 30,000. That leaves 90,000 before financing and tax. Against an illustrative all-in acquisition cost of 2,000,000, the ratio is 4.5 percent. This is a simplified operating-yield calculation, not a forecast or a complete return.",
+        "lines": [
+          "Rent collected  Rs 120,000/year",
+          "Operating costs  Rs 30,000",
+          "Before finance/tax  Rs 90,000",
+          "90,000 / 2,000,000 = 4.5%"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Vacancy, unexpected repairs, borrowing costs and selling expenses can change the result. Verify title, approvals and local obligations through qualified professionals. Inspect actual demand for comparable rentals rather than relying only on a seller's projected rent.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Build a base case and a case with lower rent or several vacant months. Include acquisition charges and a reserve for costs you must pay without a tenant. If the investment only works under perfect occupancy and rising prices, make that dependency explicit.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  },
+  "How to Evaluate Property Value": {
+    "title": "Compare Two Property Prices Using the Same Area Basis",
+    "thumbnail_text": "COMPARE LIKE WITH LIKE",
+    "market": "IN",
+    "currency": "INR",
+    "sources": [],
+    "scenes": [
+      {
+        "heading": "The question",
+        "narration": "Two advertised property prices can be misleading when the area measurements differ. Establish the same area basis, location and condition before comparing the numbers.",
+        "lines": [
+          "COMPARE LIKE WITH LIKE"
+        ]
+      },
+      {
+        "heading": "Worked example",
+        "narration": "Imagine property A is priced at 6,000,000 rupees for 1,000 square feet of carpet area. Property B costs 6,500,000 for 1,300 square feet of saleable area. Dividing produces 6,000 and 5,000 rupees per square foot, but those figures use different denominators. You cannot conclude that B offers better value until you obtain comparable measurements.",
+        "lines": [
+          "A  Rs 6m / 1,000 carpet sq ft",
+          "B  Rs 6.5m / 1,300 saleable sq ft",
+          "Different area definitions",
+          "Obtain comparable measurements"
+        ]
+      },
+      {
+        "heading": "What changes the answer",
+        "narration": "Check age, floor, access, condition, parking and recurring charges. Distinguish asking prices from verified completed transactions. A comparable sale needs context about its date and terms. Legal title and approvals require appropriate document review in addition to price comparison.",
+        "lines": [
+          "Compare assumptions",
+          "Check costs and constraints"
+        ]
+      },
+      {
+        "heading": "Your next step",
+        "narration": "Create a table with the same area definition for each property and list total acquisition costs separately. Record unknowns rather than filling them with guesses. Use suitable local professional advice for valuation and document checks before committing to a purchase.",
+        "lines": [
+          "Use your own numbers",
+          "Check the linked references"
+        ]
+      }
+    ]
+  }
+}

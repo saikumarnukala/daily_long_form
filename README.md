@@ -1,6 +1,22 @@
 # Finance Decoded — Daily YouTube Automation
 
-A fully automated system that creates and uploads one long-form finance video to YouTube every day using only free tools.
+A scheduled pipeline for concise, faceless finance explainers for Indian viewers.
+Narration uses the existing Deepgram account. The 28 editable storyboards in
+`data/storyboards.json` provide separate lessons, worked examples and on-screen cards.
+Scripts are deliberately shorter than the former generic category lectures.
+
+The daily topic schedule is retained. Refresh the storyboard library as topics cycle;
+this version does not generate unlimited fresh scripts or optimize from analytics.
+Custom topic overrides require a matching storyboard instead of relabelling another lesson.
+
+Captions use measured phrase-audio intervals. Chapters and teaching cards use measured
+scene boundaries. Captions are burned into the exported video. GitHub Actions preserves
+the script, captions, thumbnail, scene frames and MP4 for seven days. Dry runs skip upload
+and do not advance publication history. Use `python -m unittest discover -s tests -v`
+to run offline regression tests, including a synthetic-audio FFmpeg render.
+
+`TTS_VOICE` can override the consistent default channel voice. Production narration and
+YouTube credentials remain configured through the existing GitHub secrets.
 
 ---
 
@@ -14,11 +30,11 @@ GitHub Actions (cron: 2am UTC daily)
 │                  Pipeline Orchestrator               │
 │                                                     │
 │  Step 1 → Topic Selection   (weekday + history)     │
-│  Step 2 → Script Generation (template-based)        │
-│  Step 3 → TTS Audio         (Edge TTS, Indian EN)   │
-│  Step 4 → B-roll Clips      (Pexels Videos API)     │
+│  Step 2 → Script Loading (topic-specific storyboard)        │
+│  Step 3 → TTS Audio         (Deepgram Aura-2)   │
+│  Step 4 → Scene Cards       (worked examples)     │
 │  Step 5 → Thumbnail         (Pexels Photos + Pillow)│
-│  Step 6 → Video Assembly    (MoviePy, 1080p MP4)    │
+│  Step 6 → Video Assembly    (FFmpeg, 1080p MP4)    │
 │  Step 7 → Metadata          (title, desc, tags)     │
 │  Step 8 → YouTube Upload    (OAuth2 + Data API v3)  │
 │  Step 9 → History Update    (data/history.json)     │

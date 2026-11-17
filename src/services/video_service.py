@@ -295,6 +295,10 @@ def assemble_video(
     Returns:
         Absolute path of the exported MP4.
     """
+    if script_data.get('scenes'):
+        from src.services.storyboard_service import assemble_storyboard
+        return assemble_storyboard(audio_path, script_data, output_path, subtitle_path)
+
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.parent  # reuse the same temp dir

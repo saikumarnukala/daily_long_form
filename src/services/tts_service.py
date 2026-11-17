@@ -1,10 +1,11 @@
-﻿"""
+"""
 TTS service using Deepgram Aura-2.
 
 Scripts are split by emotion markers, then by Aura's per-request character limit.
 Emotion is conveyed via speaking speed and punctuation (Aura-2 is context-aware).
 """
 import os
+import json
 import re
 import shutil
 import subprocess
@@ -268,78 +269,59 @@ def _generate_timed_srt(text: str, audio_duration_s: float, srt_path: str) -> No
     logger.info("Subtitles written: %d lines -> %s", len(lines), srt_path)
 
 
-def generate_tts(text: str, output_path: str, voice_index: int = 0) -> Dict[str, Any]:
-    weekday = voice_index % 7
-    model = voice_for_weekday(weekday)
-    day_name = TTS_WEEKDAY_NAMES[weekday]
-    logger.info(
-        "Generating TTS | %s (weekday %d) | model '%s' -> %s",
-        day_name, weekday, model, output_path,
+def _audio_duration(path: str) -> float:
+    result = subprocess.run(
+        ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+         '-of', 'json', path], capture_output=True, text=True, check=True, timeout=30,
     )
-    out_path = Path(output_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    duration = float(json.loads(result.stdout)['format']['duration'])
+    if duration <= 0:
+        raise ValueError(f'Invalid audio duration for {path}')
+    return duration
 
-    logger.info("TTS backend: Deepgram Aura-2")
 
-    emotion_sections = _split_by_emotion(text)
-    all_chunks: List[Tuple[str, Optional[str]]] = []
-    for section_text, style in emotion_sections:
-        for segment in _split_by_char_limit(section_text):
-            all_chunks.append((segment, style))
-
-    logger.info(
-        "Script: %d emotion section(s) -> %d TTS segment(s) (max %d chars each).",
-        len(emotion_sections),
-        len(all_chunks),
-        DEEPGRAM_TTS_MAX_CHARS,
-    )
-
-    tmp_dir = out_path.parent
-    chunk_paths: List[str] = []
-    try:
-        for i, (chunk_text, style) in enumerate(all_chunks):
-            chunk_path = str(tmp_dir / f"_tts_chunk_{i:03d}.mp3")
-            logger.info(
-                "  Segment %d/%d (%d chars, style=%s, speed=%s)...",
-                i + 1,
-                len(all_chunks),
-                len(chunk_text),
-                style or "default",
-                _style_speed(style),
+def generate_tts(
+    text: str, output_path: str, voice_index: int = 0,
+    scenes: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Synthesize caption-sized phrases and measure their actual audio intervals."""
+    model = voice_for_weekday(voice_index % 7)
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    scenes = scenes or [{'heading': 'Narration', 'narration': text}]
+    if ' '.join(text.split()) != ' '.join(' '.join(s['narration'] for s in scenes).split()):
+        raise ValueError('Scene narration must match the complete spoken script.')
+    captions = []
+    scene_timings = []
+    chunk_paths = []
+    cursor = 0.0
+    # A separate directory prevents stale chunks from a previous failed run.
+    with tempfile.TemporaryDirectory(prefix='narration_', dir=out.parent) as tmp:
+        for scene in scenes:
+            scene_start = cursor
+            for phrase in _split_by_char_limit(scene['narration'], max_chars=160):
+                path = str(Path(tmp) / f'{len(chunk_paths):04d}.mp3')
+                _run_synthesis(phrase, path, model)
+                duration = _audio_duration(path)
+                captions.append((cursor, cursor + duration, phrase))
+                cursor += duration
+                chunk_paths.append(path)
+            scene_timings.append({'heading': scene['heading'], 'start': scene_start, 'end': cursor})
+        if not chunk_paths:
+            raise ValueError('Cannot narrate an empty script.')
+        _concat_mp3s(chunk_paths, str(out))
+    actual_duration = _audio_duration(str(out))
+    # MP3 container padding may slightly change the concatenated duration.
+    scale = actual_duration / cursor
+    srt_path = str(out.with_suffix('.srt'))
+    with open(srt_path, 'w', encoding='utf-8') as fh:
+        for index, (start, end, phrase) in enumerate(captions, 1):
+            fh.write(
+                f'{index}\n{_ms_to_srt_ts(round(start * scale * 1000))} --> '
+                f'{_ms_to_srt_ts(round(end * scale * 1000))}\n{phrase}\n\n'
             )
-            _run_synthesis(chunk_text, chunk_path, model, style=style)
-            chunk_paths.append(chunk_path)
-
-        if len(chunk_paths) == 1:
-            shutil.move(chunk_paths[0], str(out_path))
-            chunk_paths.clear()
-        else:
-            logger.info("Concatenating %d segments -> %s", len(chunk_paths), output_path)
-            _concat_mp3s(chunk_paths, str(out_path))
-    finally:
-        for p in chunk_paths:
-            try:
-                os.remove(p)
-            except OSError:
-                pass
-
-    if not out_path.exists() or out_path.stat().st_size == 0:
-        raise RuntimeError(f"TTS output file is missing or empty: {output_path}")
-
-    word_count = len(text.split())
-    duration_estimate = (word_count / TTS_WORDS_PER_MINUTE) * 60.0
-
-    srt_path: Optional[str] = None
-    try:
-        srt_path = str(out_path.with_suffix(".srt"))
-        _generate_timed_srt(text, duration_estimate, srt_path)
-    except Exception as exc:
-        logger.warning("Subtitle generation failed (%s) -- continuing without.", exc)
-        srt_path = None
-
-    logger.info("TTS complete. Words: %d | Estimated duration: %.0fs", word_count, duration_estimate)
-    return {
-        "audio_path": str(out_path),
-        "duration_seconds": duration_estimate,
-        "subtitle_path": srt_path,
-    }
+    for timing in scene_timings:
+        timing['start'] *= scale
+        timing['end'] *= scale
+    return {'audio_path': str(out), 'duration_seconds': actual_duration,
+            'subtitle_path': srt_path, 'scene_timings': scene_timings}

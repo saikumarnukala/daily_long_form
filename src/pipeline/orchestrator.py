@@ -8,6 +8,7 @@ Any step failure raises immediately (fail-fast); the caller
 """
 import json
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
@@ -72,6 +73,7 @@ class PipelineOrchestrator:
             "video_path": str(context.get("video_path", "")),
             "video_id": context.get("video_id", ""),
             "clips_used": context.get("clips_used_ids", []),
+            "content_hash": context.get("script_data", {}).get("content_hash"),
         }
         self.history["videos"].append(entry)
 
@@ -94,6 +96,8 @@ class PipelineOrchestrator:
     def _step_script(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 2: Script Generation ───")
         context["script_data"] = script_service.generate_script(context["topic_data"])
+        script_path = get_output_path("script.json")
+        Path(script_path).write_text(json.dumps(context["script_data"], indent=2), encoding="utf-8")
 
     def _step_tts(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 3: TTS Generation ───")
@@ -109,13 +113,24 @@ class PipelineOrchestrator:
             text=context["script_data"]["full_text"],
             output_path=audio_path,
             voice_index=weekday,
+            scenes=context["script_data"].get("scenes"),
         )
         context["audio_path"] = result["audio_path"]
         context["audio_duration"] = result["duration_seconds"]
         context["subtitle_path"] = result.get("subtitle_path")
+        context["script_data"]["scene_timings"] = result.get("scene_timings", [])
+        Path(get_output_path("script.json")).write_text(
+            json.dumps(context["script_data"], indent=2), encoding="utf-8"
+        )
+        if context["subtitle_path"]:
+            shutil.copyfile(context["subtitle_path"], get_output_path("narration.srt"))
 
     def _step_media(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 4: Media Fetching ───")
+        if context['script_data'].get('scenes'):
+            context['clip_paths'] = []
+            context['clips_used_ids'] = []
+            return
         keywords = context["topic_data"]["keywords"]
         duration = context["audio_duration"]
         used_ids = self.history.get("used_pexels_videos", [])
@@ -137,7 +152,7 @@ class PipelineOrchestrator:
     def _step_thumbnail(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 5: Thumbnail Creation ───")
         keyword = context["topic_data"]["keywords"][0]
-        title = context["script_data"]["title"]
+        title = context["script_data"].get("thumbnail_text", context["script_data"]["title"])
         thumb_path = str(get_temp_path("thumbnail.jpg"))
         thumbnail_service.create_thumbnail(
             keyword=keyword,
@@ -146,6 +161,7 @@ class PipelineOrchestrator:
             category=context["topic_data"].get("category"),
         )
         context["thumbnail_path"] = thumb_path
+        shutil.copyfile(thumb_path, get_output_path("thumbnail.jpg"))
 
     def _step_video(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 6: Video Assembly ───")
@@ -164,20 +180,17 @@ class PipelineOrchestrator:
     def _step_metadata(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 7: Metadata Generation ───")
         script = context["script_data"]
-        # Enrich description with timestamps for section labels
-        description = (
-            f"{script['description']}\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 CHAPTERS\n"
-            "00:00 Introduction\n"
-            "01:30 The Problem\n"
-            "03:00 Deep Dive\n"
-            "07:00 Real-World Example (₹)\n"
-            "10:00 Your Action Plan\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"🔔 Subscribe to {CHANNEL_BRANDING} for daily finance education!\n"
-            f"#{CHANNEL_BRANDING.replace(' ', '')} #PersonalFinance #IndiaFinance #MoneyTips"
-        )
+        timings = script.get("scene_timings", [])
+        chapters = []
+        for timing in timings:
+            seconds = int(timing['start'])
+            chapters.append(f"{seconds // 60:02d}:{seconds % 60:02d} {timing['heading']}")
+        description = script['description']
+        if chapters:
+            description += "\n\nChapters\n" + "\n".join(chapters)
+        if script.get('sources'):
+            description += "\n\nReferences\n" + "\n".join(script['sources'])
+        description += f"\n\n{CHANNEL_BRANDING} | Practical money examples for India"
         context["upload_metadata"] = {
             "title": script["title"],
             "description": description,
@@ -200,7 +213,8 @@ class PipelineOrchestrator:
 
     def _step_history_update(self, context: Dict[str, Any]) -> None:
         logger.info("─── Step 9: History Update ───")
-        self._update_history(context)
+        if not self.dry_run:
+            self._update_history(context)
 
     # ─────────────────────────── Main run ───────────────────────────
 

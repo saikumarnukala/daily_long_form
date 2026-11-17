@@ -65,8 +65,8 @@ TTS_VOICES = [TTS_VOICE_BY_WEEKDAY[i] for i in range(7)]
 
 
 def voice_for_weekday(weekday: int) -> str:
-    """Return the Deepgram Aura-2 model ID for weekday 0–6."""
-    return TTS_VOICE_BY_WEEKDAY[weekday % 7]
+    """Use one channel voice, with an optional environment override."""
+    return os.getenv("TTS_VOICE", "aura-2-thalia-en")
 
 
 TTS_WORDS_PER_MINUTE = 175

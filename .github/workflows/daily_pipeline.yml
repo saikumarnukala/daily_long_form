@@ -23,6 +23,10 @@ env:
 permissions:
   contents: write
 
+concurrency:
+  group: daily-video-pipeline
+  cancel-in-progress: false
+
 jobs:
   run-pipeline:
     name: Generate & Upload Daily Video
@@ -79,6 +83,9 @@ jobs:
         run: |
           python -c "import PIL; import requests; from src.services import tts_service, thumbnail_service; print('All imports OK')"
 
+      - name: Validate content and rendering
+        run: python -m unittest discover -s tests -v
+
       # ── 7b. Verify required secrets (values not printed) ───────────────
       - name: Verify API secrets
         env:
@@ -109,10 +116,22 @@ jobs:
             python -m src.main --cleanup-temp
           fi
 
+      - name: Preserve script and preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-preview-${{ github.run_id }}
+          path: |
+            assets/output/script.json
+            assets/output/*.mp4
+            assets/output/*_frames/*.png
+            assets/output/*.srt
+            assets/output/thumbnail.jpg
+          retention-days: 7
+
       # ── 9. Commit updated history.json back to repo ─────────────────────
       - name: Commit history update
-        if: success()
-        continue-on-error: true
+        if: success() && github.event.inputs.dry_run != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
